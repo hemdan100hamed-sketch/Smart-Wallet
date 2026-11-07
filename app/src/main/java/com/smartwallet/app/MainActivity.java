@@ -136,7 +136,7 @@ public class MainActivity extends Activity {
 
         try {
             double value = Double.parseDouble(amount);
-            if (!Double.isFinite(value) || value <= 0) {
+            if ((Double.isNaN(value) || Double.isInfinite(value)) || value <= 0) {
                 throw new NumberFormatException();
             }
         } catch (NumberFormatException ex) {
