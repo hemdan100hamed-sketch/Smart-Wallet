@@ -38,9 +38,14 @@ public class MainActivity extends Activity {
     private static final String TEST_USSD = "*#100";
 
     private Spinner simSpinner;
+    private Button testButton;
     private TextView resultView;
     private TextView permissionView;
     private final List<SubscriptionInfo> subscriptions = new ArrayList<>();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private boolean requestInProgress = false;
+    private int requestId = 0;
+    private Runnable timeoutRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,9 +123,9 @@ public class MainActivity extends Activity {
         explanation.setPadding(0, dp(12), 0, dp(14));
         page.addView(explanation);
 
-        Button test = button("إرسال الاختبار واستقبال الرد");
-        page.addView(test, matchWrap());
-        test.setOnClickListener(v -> sendTestRequest());
+        testButton = button("إرسال الاختبار واستقبال الرد");
+        page.addView(testButton, matchWrap());
+        testButton.setOnClickListener(v -> sendTestRequest());
 
         TextView resultTitle = text("نتيجة الشبكة", 17, INK, true);
         resultTitle.setPadding(0, dp(22), 0, dp(8));
@@ -194,6 +199,7 @@ public class MainActivity extends Activity {
     }
 
     private void sendTestRequest() {
+        if (requestInProgress) return;
         if (Build.VERSION.SDK_INT < 26) {
             showResult("إصدار أندرويد لا يدعم واجهة إرسال USSD المطلوبة.");
             return;
@@ -212,29 +218,59 @@ public class MainActivity extends Activity {
         SubscriptionInfo selected = subscriptions.get(position);
         TelephonyManager base = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         TelephonyManager forSim = base.createForSubscriptionId(selected.getSubscriptionId());
-        showResult("جارٍ إرسال طلب الاختبار إلى SIM " + (selected.getSimSlotIndex() + 1) + "...");
+        final int thisRequestId = ++requestId;
+        requestInProgress = true;
+        testButton.setEnabled(false);
+        testButton.setText("جارٍ انتظار رد الشبكة...");
+        showResult("جارٍ إرسال طلب الاختبار إلى SIM " + (selected.getSimSlotIndex() + 1)
+                + ". سننتظر 30 ثانية كحد أقصى، وقد يصل الرد بعدها متأخرًا.");
+
+        timeoutRunnable = () -> {
+            if (thisRequestId != requestId || !requestInProgress) return;
+            requestInProgress = false;
+            testButton.setEnabled(true);
+            testButton.setText("إعادة الاختبار");
+            resultView.setText("لم يصل رد خلال 30 ثانية. انتهت مهلة الانتظار داخل التطبيق، "
+                    + "لكن قد يصل رد الشبكة متأخرًا. لا يعني ذلك وحده أن الكود غير صحيح.");
+        };
+        mainHandler.postDelayed(timeoutRunnable, 30000);
+
         try {
             forSim.sendUssdRequest(TEST_USSD, new TelephonyManager.UssdResponseCallback() {
                 @Override
                 public void onReceiveUssdResponse(TelephonyManager telephonyManager,
                                                   String request, CharSequence response) {
-                    showResult("وصل رد من الشبكة:\n\n" + response);
+                    completeRequest(thisRequestId, "وصل رد من الشبكة:\n\n" + response);
                 }
 
                 @Override
                 public void onReceiveUssdResponseFailed(TelephonyManager telephonyManager,
                                                         String request, int failureCode) {
-                    showResult("لم يكتمل طلب USSD. رمز الخطأ: " + failureCode
+                    completeRequest(thisRequestId, "لم يكتمل طلب USSD. رمز الخطأ: " + failureCode
                             + "\nقد يكون السبب عدم دعم الشبكة أو الهاتف لهذا الطلب.");
                 }
-            }, new Handler(Looper.getMainLooper()));
+            }, mainHandler);
         } catch (SecurityException ex) {
-            showResult("رفض أندرويد الإذن اللازم لإرسال طلب USSD.");
+            completeRequest(thisRequestId, "رفض أندرويد الإذن اللازم لإرسال طلب USSD.");
         } catch (UnsupportedOperationException ex) {
-            showResult("الهاتف لا يوفر دعمًا لميزة إرسال USSD عبر هذه الواجهة.");
+            completeRequest(thisRequestId, "الهاتف لا يوفر دعمًا لميزة إرسال USSD عبر هذه الواجهة.");
         } catch (RuntimeException ex) {
-            showResult("تعذر بدء الاختبار: " + ex.getClass().getSimpleName());
+            completeRequest(thisRequestId, "تعذر بدء الاختبار: " + ex.getClass().getSimpleName());
         }
+    }
+
+    private void completeRequest(int id, String message) {
+        runOnUiThread(() -> {
+            if (id != requestId) return;
+            if (timeoutRunnable != null) {
+                mainHandler.removeCallbacks(timeoutRunnable);
+                timeoutRunnable = null;
+            }
+            requestInProgress = false;
+            testButton.setEnabled(true);
+            testButton.setText("إعادة الاختبار");
+            resultView.setText(message);
+        });
     }
 
     private void showResult(String value) {
