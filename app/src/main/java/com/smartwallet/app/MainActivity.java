@@ -233,16 +233,14 @@ public class MainActivity extends Activity {
                 simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ? "تحتاج PIN للشريحة" :
                 simState == TelephonyManager.SIM_STATE_PUK_REQUIRED ? "تحتاج PUK للشريحة" :
                 "حالة رقمها " + simState;
-        boolean apiSupported = Build.VERSION.SDK_INT >= 29 && forSim.isUssdApiSupported();
-        String supportText = Build.VERSION.SDK_INT >= 29
-                ? (apiSupported ? "واجهة USSD مدعومة حسب أندرويد." : "واجهة USSD غير مدعومة حسب أندرويد لهذه الشريحة/الجهاز.")
-                : "لا تتوفر قراءة حالة دعم واجهة USSD على إصدار أندرويد هذا.";
+        String apiText = "إصدار أندرويد: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")";
+        String subscriptionText = "معرّف الشريحة: " + selected.getSubscriptionId();
+        String supportText = Build.VERSION.SDK_INT >= 26
+                ? "هذا الإصدار يوفر واجهة sendUssdRequest؛ لا توجد طريقة عامة موثوقة لقراءة دعم الشبكة مسبقًا."
+                : "إصدار أندرويد أقدم من واجهة sendUssdRequest.";
         diagnosticView.setText("نتيجة فحص التوافق:\nالشريحة: SIM " + (selected.getSimSlotIndex() + 1)
-                + " — " + carrier + "\nحالة الشريحة: " + simStateText + "\n" + supportText);
-        if (Build.VERSION.SDK_INT >= 29 && !apiSupported) {
-            showResult("أوقفنا الإرسال لأن أندرويد أفاد بأن واجهة USSD غير مدعومة. لم يتم إرسال أي طلب.");
-            return;
-        }
+                + " — " + carrier + "\nحالة الشريحة: " + simStateText + "\n"
+                + subscriptionText + "\n" + apiText + "\n" + supportText);
         final int thisRequestId = ++requestId;
         requestInProgress = true;
         testButton.setEnabled(false);
