@@ -224,9 +224,14 @@ public class MainActivity extends Activity {
         }
 
         SubscriptionInfo selected = subscriptions.get(position);
+        String carrier = String.valueOf(selected.getCarrierName());
+        String normalizedCarrier = carrier.toLowerCase(Locale.ROOT);
+        if (!normalizedCarrier.contains("vodafone") && !normalizedCarrier.contains("فودافون")) {
+            showResult("الشريحة المحددة ليست فودافون. اختر SIM Vodafone من القائمة ثم أعد المحاولة.");
+            return;
+        }
         TelephonyManager base = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         TelephonyManager forSim = base.createForSubscriptionId(selected.getSubscriptionId());
-        String carrier = String.valueOf(selected.getCarrierName());
         int simState = forSim.getSimState();
         String simStateText = simState == TelephonyManager.SIM_STATE_READY ? "جاهزة" :
                 simState == TelephonyManager.SIM_STATE_ABSENT ? "غير موجودة" :
@@ -246,7 +251,8 @@ public class MainActivity extends Activity {
         testButton.setEnabled(false);
         testButton.setText("جارٍ انتظار رد الشبكة...");
         showResult("جارٍ إرسال طلب الاختبار إلى SIM " + (selected.getSimSlotIndex() + 1)
-                + ". سننتظر 30 ثانية كحد أقصى، وقد يصل الرد بعدها متأخرًا.");
+                + " — " + carrier + " (Subscription ID: " + selected.getSubscriptionId() + "). "
+                + "تم توجيه الطلب إلى هذه الشريحة تحديدًا. سننتظر 30 ثانية كحد أقصى، وقد يصل الرد بعدها متأخرًا.");
 
         timeoutRunnable = () -> {
             if (thisRequestId != requestId || !requestInProgress) return;
