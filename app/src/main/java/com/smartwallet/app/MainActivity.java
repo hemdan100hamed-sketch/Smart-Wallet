@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
     private Button testButton;
     private TextView resultView;
     private TextView permissionView;
+    private TextView diagnosticView;
     private final List<SubscriptionInfo> subscriptions = new ArrayList<>();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean requestInProgress = false;
@@ -95,6 +96,13 @@ public class MainActivity extends Activity {
 
         permissionView = text("جارٍ التحقق من أذونات الهاتف...", 13, MUTED, false);
         card.addView(permissionView);
+
+        diagnosticView = text("لم يتم إجراء فحص التوافق بعد.", 13, INK, false);
+        diagnosticView.setPadding(dp(12), dp(12), dp(12), dp(12));
+        diagnosticView.setBackground(round(Color.rgb(240, 242, 245), 12));
+        LinearLayout.LayoutParams diagnosticParams = matchWrap();
+        diagnosticParams.topMargin = dp(10);
+        card.addView(diagnosticView, diagnosticParams);
 
         simSpinner = new Spinner(this);
         LinearLayout.LayoutParams spinnerParams = matchWrap();
@@ -218,6 +226,23 @@ public class MainActivity extends Activity {
         SubscriptionInfo selected = subscriptions.get(position);
         TelephonyManager base = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         TelephonyManager forSim = base.createForSubscriptionId(selected.getSubscriptionId());
+        String carrier = String.valueOf(selected.getCarrierName());
+        int simState = forSim.getSimState();
+        String simStateText = simState == TelephonyManager.SIM_STATE_READY ? "جاهزة" :
+                simState == TelephonyManager.SIM_STATE_ABSENT ? "غير موجودة" :
+                simState == TelephonyManager.SIM_STATE_PIN_REQUIRED ? "تحتاج PIN للشريحة" :
+                simState == TelephonyManager.SIM_STATE_PUK_REQUIRED ? "تحتاج PUK للشريحة" :
+                "حالة رقمها " + simState;
+        boolean apiSupported = Build.VERSION.SDK_INT >= 29 && forSim.isUssdApiSupported();
+        String supportText = Build.VERSION.SDK_INT >= 29
+                ? (apiSupported ? "واجهة USSD مدعومة حسب أندرويد." : "واجهة USSD غير مدعومة حسب أندرويد لهذه الشريحة/الجهاز.")
+                : "لا تتوفر قراءة حالة دعم واجهة USSD على إصدار أندرويد هذا.";
+        diagnosticView.setText("نتيجة فحص التوافق:\nالشريحة: SIM " + (selected.getSimSlotIndex() + 1)
+                + " — " + carrier + "\nحالة الشريحة: " + simStateText + "\n" + supportText);
+        if (Build.VERSION.SDK_INT >= 29 && !apiSupported) {
+            showResult("أوقفنا الإرسال لأن أندرويد أفاد بأن واجهة USSD غير مدعومة. لم يتم إرسال أي طلب.");
+            return;
+        }
         final int thisRequestId = ++requestId;
         requestInProgress = true;
         testButton.setEnabled(false);
