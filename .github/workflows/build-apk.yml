@@ -2,7 +2,7 @@ name: Build Smart Wallet APK
 
 on:
   push:
-    branches: [ "main", "transfer-prefill-ui", "smart-wallet-v2", "smart-wallet-v3", "smart-wallet-v3.4" ]
+    branches: [ "main", "transfer-prefill-ui", "smart-wallet-v2", "smart-wallet-v3", "smart-wallet-v3.4", "smart-wallet-v3.6" ]
   workflow_dispatch:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Smart-Wallet-v3.4-debug
+          name: Smart-Wallet-v3.6-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
