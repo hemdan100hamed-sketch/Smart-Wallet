@@ -98,8 +98,9 @@ public class MainActivity extends Activity {
 
         phoneInput = new EditText(this);
         phoneInput.setSingleLine(true);
-        phoneInput.setTextSize(23);
+        phoneInput.setTextSize(21);
         phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        phoneInput.setHorizontallyScrolling(true);
         phoneInput.setTextColor(INK);
         phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
         phoneInput.setHint("01xxxxxxxxx");
@@ -109,12 +110,17 @@ public class MainActivity extends Activity {
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         phoneInput.setBackground(inputBorder(RED));
         LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(68), 1f);
-        phoneParams.rightMargin = dp(10);
+        phoneParams.rightMargin = dp(8);
         phoneRow.addView(phoneInput, phoneParams);
 
-        Button contacts = button("جهات الاتصال", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
-        contacts.setTextSize(16);
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(132), dp(68)));
+        // زر جهات اتصال مدمج حتى لا يقتطع مساحة رقم الهاتف.
+        Button contacts = button("👥", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
+        contacts.setTextSize(23);
+        contacts.setMinHeight(0);
+        contacts.setMinimumHeight(0);
+        contacts.setPadding(0, 0, 0, 0);
+        contacts.setContentDescription("اختيار رقم من جهات الاتصال");
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(60), dp(68)));
         contacts.setOnClickListener(v -> chooseContact());
 
         TextView validation = label("أدخل رقمًا مصريًا من 11 رقمًا", 16, MUTED, false);
