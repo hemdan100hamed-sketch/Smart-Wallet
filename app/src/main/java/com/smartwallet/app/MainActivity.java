@@ -11,6 +11,9 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.method.PasswordTransformationMethod;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -43,6 +46,9 @@ public class MainActivity extends Activity {
 
     private EditText phoneInput;
     private EditText amountInput;
+    private EditText pinInput;
+    private final Handler pinMaskHandler = new Handler(Looper.getMainLooper());
+    private Runnable hidePinRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +60,215 @@ public class MainActivity extends Activity {
     }
 
     private void showHome() {
+        LinearLayout page = basePage();
+        page.setPadding(dp(16), dp(18), dp(16), dp(12));
+
+        TextView title = label("Smart Wallet", 30, NAVY, true);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, dp(12), 0, dp(8));
+        page.addView(title);
+        TextView subtitle = label("اختر المحفظة التي تريد استخدامها", 19, MUTED, true);
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, 0, 0, dp(22));
+        page.addView(subtitle);
+
+        LinearLayout vodafone = compactCard(page);
+        vodafone.setPadding(dp(18), dp(20), dp(18), dp(20));
+        vodafone.setBackground(gradient(Color.rgb(220, 20, 60), Color.rgb(170, 10, 45), 22));
+        TextView vLogo = label("◉  vodafone cash", 25, Color.WHITE, true);
+        vLogo.setGravity(Gravity.CENTER);
+        vodafone.addView(vLogo, matchWrap());
+        TextView vHint = label("خدمات محفظة فودافون كاش", 16, Color.WHITE, false);
+        vHint.setGravity(Gravity.CENTER);
+        vHint.setPadding(0, dp(8), 0, 0);
+        vodafone.addView(vHint);
+        vodafone.setOnClickListener(v -> showVodafoneHome());
+
+        LinearLayout etisalat = compactCard(page);
+        etisalat.setPadding(dp(18), dp(20), dp(18), dp(20));
+        etisalat.setBackground(gradient(Color.rgb(65, 25, 125), Color.rgb(35, 15, 85), 22));
+        TextView eLogo = label("e&  CASH", 27, Color.WHITE, true);
+        eLogo.setGravity(Gravity.CENTER);
+        etisalat.addView(eLogo, matchWrap());
+        TextView eHint = label("خدمات محفظة e& كاش", 16, Color.WHITE, false);
+        eHint.setGravity(Gravity.CENTER);
+        eHint.setPadding(0, dp(8), 0, 0);
+        etisalat.addView(eHint);
+        etisalat.setOnClickListener(v -> showEtisalatHome());
+
+        TextView offline = label("يعمل التطبيق دون اتصال بالإنترنت", 17, GREEN, true);
+        offline.setGravity(Gravity.CENTER);
+        offline.setPadding(0, dp(22), 0, dp(8));
+        page.addView(offline);
+        TextView version = label("SMART WALLET  •  3.6", 12, MUTED, true);
+        version.setGravity(Gravity.CENTER);
+        page.addView(version);
+        setContentView(redFrame(page));
+    }
+
+    private void showVodafoneHome() {
+        LinearLayout page = basePage();
+        page.setPadding(dp(16), dp(14), dp(16), dp(8));
+        Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> showHome());
+        page.addView(back, matchWrap());
+        TextView section = label("خدمات فودافون كاش", 22, NAVY, true);
+        section.setPadding(dp(2), dp(14), 0, dp(10));
+        page.addView(section);
+        addService(page, "الاستعلام عن الرصيد", "اعرف رصيد محفظتك بسهولة", "◉", ROYAL_BLUE, v -> openUssd("*9*13#"));
+        addService(page, "تحويل الأموال", "حوّل الأموال إلى رقم محمول أو جهة اتصال", "⇄", TEAL, v -> showTransfer());
+        TextView version = label("SMART WALLET  •  3.6", 12, MUTED, true);
+        version.setGravity(Gravity.CENTER);
+        page.addView(version);
+        setContentView(redFrame(page));
+    }
+
+    private void showEtisalatHome() {
+        LinearLayout page = basePage();
+        Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> showHome());
+        page.addView(back, matchWrap());
+        TextView section = label("خدمات e& كاش", 23, NAVY, true);
+        section.setPadding(0, dp(18), 0, dp(12));
+        page.addView(section);
+        addService(page, "الاستعلام عن الرصيد", "استعلم عن رصيد محفظتك", "◉", ROYAL_BLUE, v -> openUssd("*777*4#"));
+        addService(page, "تحويل الأموال", "إدخال بيانات التحويل ومراجعتها قبل الاتصال", "⇄", TEAL, v -> showEtisalatTransfer());
+        TextView offline = label("لا يحتاج التطبيق إلى الإنترنت", 16, GREEN, true);
+        offline.setGravity(Gravity.CENTER);
+        offline.setPadding(0, dp(18), 0, 0);
+        page.addView(offline);
+        setContentView(redFrame(page));
+    }
+
+    private void showEtisalatTransfer() {
+        LinearLayout page = basePage();
+        Button back = button("رجوع إلى خدمات e& كاش", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> showEtisalatHome());
+        page.addView(back, matchWrap());
+
+        LinearLayout form = card(page);
+        TextView heading = label("تحويل الأموال", 26, NAVY, true);
+        heading.setPadding(0, 0, 0, dp(14));
+        form.addView(heading);
+        TextView phoneLabel = label("1- رقم المحول إليه", 19, INK, true);
+        form.addView(phoneLabel);
+        LinearLayout phoneRow = new LinearLayout(this);
+        phoneRow.setOrientation(LinearLayout.HORIZONTAL);
+        phoneRow.setGravity(Gravity.CENTER_VERTICAL);
+        phoneRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        form.addView(phoneRow, matchWrap());
+        phoneInput = new EditText(this);
+        phoneInput.setSingleLine(true);
+        phoneInput.setTextSize(20);
+        phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        phoneInput.setInputType(3);
+        phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
+        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        phoneInput.setHint("01xxxxxxxxx");
+        phoneInput.setPadding(dp(8), dp(8), dp(8), dp(8));
+        phoneInput.setBackgroundColor(Color.TRANSPARENT);
+        Button favorites = button("♡", Color.TRANSPARENT, RED);
+        styleInlineIcon(favorites, "الأرقام المفضلة");
+        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        favorites.setOnClickListener(v -> showFavorites());
+        Button contacts = button("👤", Color.TRANSPARENT, RED);
+        styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        contacts.setOnClickListener(v -> chooseContact());
+        phoneRow.addView(phoneInput, new LinearLayout.LayoutParams(0, dp(68), 1f));
+        phoneRow.setPadding(dp(5), dp(5), dp(5), dp(5));
+        phoneRow.setBackground(inputBorder(FIELD_BORDER));
+
+        TextView amountLabel = label("2- مبلغ التحويل بالجنيه", 19, INK, true);
+        amountLabel.setPadding(0, dp(16), 0, dp(6));
+        form.addView(amountLabel);
+        amountInput = new EditText(this);
+        amountInput.setSingleLine(true);
+        amountInput.setTextSize(22);
+        amountInput.setInputType(8194);
+        amountInput.setTextDirection(View.TEXT_DIRECTION_LTR);
+        amountInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        amountInput.setHint("أدخل المبلغ");
+        amountInput.setPadding(dp(12), dp(12), dp(12), dp(12));
+        amountInput.setBackground(inputBorder(FIELD_BORDER));
+        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+
+        TextView pinLabel = label("3- الرقم السري للمحفظة", 19, INK, true);
+        pinLabel.setPadding(0, dp(16), 0, dp(6));
+        form.addView(pinLabel);
+        pinInput = new EditText(this);
+        pinInput.setSingleLine(true);
+        pinInput.setTextSize(22);
+        pinInput.setInputType(2);
+        pinInput.setTextDirection(View.TEXT_DIRECTION_LTR);
+        pinInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        pinInput.setHint("أدخل الرقم السري");
+        pinInput.setPadding(dp(12), dp(12), dp(12), dp(12));
+        pinInput.setBackground(inputBorder(FIELD_BORDER));
+        form.addView(pinInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+        pinInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
+                pinInput.setTransformationMethod(null);
+                int cursor = pinInput.getSelectionStart();
+                hidePinRunnable = () -> {
+                    if (pinInput != null) {
+                        pinInput.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        pinInput.setSelection(Math.max(0, Math.min(cursor, pinInput.length())));
+                    }
+                };
+                pinMaskHandler.postDelayed(hidePinRunnable, 900);
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        TextView warning = label("ملحوظة مهمة: بعد الضغط على تنفيذ التحويل، اضغط رقم 1 ثم اضغط إرسال لإتمام عملية التحويل.", 16, RED, true);
+        warning.setPadding(0, dp(14), 0, dp(14));
+        form.addView(warning);
+        Button execute = button("تنفيذ التحويل", RED, Color.WHITE);
+        form.addView(execute, matchWrap());
+        execute.setOnClickListener(v -> prepareEtisalatTransfer());
+        TextView privacy = label("الرقم السري لا يُحفظ في المفضلة أو في ملفات التطبيق.", 15, GREEN, true);
+        privacy.setPadding(0, dp(14), 0, 0);
+        form.addView(privacy);
+        setContentView(wrapScroll(redFrame(page)));
+    }
+
+    private void prepareEtisalatTransfer() {
+        String phone = phoneInput.getText().toString().trim();
+        String amount = amountInput.getText().toString().trim();
+        String pin = pinInput.getText().toString();
+        if (!phone.matches("01[0125][0-9]{8}")) {
+            phoneInput.setError("أدخل رقمًا مصريًا صحيحًا من 11 رقمًا");
+            phoneInput.requestFocus();
+            return;
+        }
+        if (!amount.matches("[0-9]+")) {
+            amountInput.setError("أدخل مبلغًا صحيحًا بالأرقام");
+            amountInput.requestFocus();
+            return;
+        }
+        try {
+            if (Long.parseLong(amount) <= 0) throw new NumberFormatException();
+        } catch (NumberFormatException ex) {
+            amountInput.setError("يجب أن يكون المبلغ أكبر من صفر");
+            amountInput.requestFocus();
+            return;
+        }
+        if (!pin.matches("[0-9]+")) {
+            pinInput.setError("أدخل الرقم السري بالأرقام");
+            pinInput.requestFocus();
+            return;
+        }
+        String ussd = "*777*1*" + pin + "*" + amount + "*" + phone + "*" + phone + "#";
+        pinInput.setText("");
+        pin = null;
+        openUssd(ussd);
+        ussd = null;
+    }
+
+    private void showHome_OLD() {
         LinearLayout page = basePage();
         page.setPadding(dp(16), dp(14), dp(16), dp(8));
 
@@ -93,8 +308,8 @@ public class MainActivity extends Activity {
 
     private void showTransfer() {
         LinearLayout page = basePage();
-        Button back = button("رجوع إلى الرئيسية", Color.rgb(235, 238, 243), INK);
-        back.setOnClickListener(v -> showHome());
+        Button back = button("رجوع إلى خدمات فودافون", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> showVodafoneHome());
         page.addView(back, matchWrap());
 
         LinearLayout form = card(page);
