@@ -53,14 +53,14 @@ public class MainActivity extends Activity {
 
         // الأهم أولاً: التحويل ثم الاستعلام عن الرصيد.
         addService(page, "تحويل الأموال", "إرسال الأموال إلى رقم محمول أو جهة اتصال", "⇄", RED, v -> showTransfer());
-        addService(page, "الاستعلام عن الرصيد", "معرفة رصيد محفظتك عبر خدمة فودافون الرسمية", "◉", BLUE(), v -> openUssd("*9*13#"));
+        addService(page, "الاستعلام عن الرصيد", "معرفة رصيد محفظتك عبر خدمة فودافون الرسمية", "▣", BLUE(), v -> openUssd("*9*13#"));
         addService(page, "خدمات أخرى", "ستتوفر خدمات إضافية في تحديثات قادمة", "＋", Color.rgb(110, 75, 190), v ->
                 Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
 
         LinearLayout safety = compactCard(page);
         TextView safeText = label("الأمان: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, MUTED, false);
         safety.addView(safeText);
-        TextView version = label("SMART WALLET  •  2.0", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  3.0 TEST", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         version.setPadding(0, dp(2), 0, 0);
         page.addView(version);
@@ -101,11 +101,16 @@ public class MainActivity extends Activity {
         phoneInput.setTextSize(21);
         phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         phoneInput.setHorizontallyScrolling(true);
+        phoneInput.setMinWidth(0);
+        phoneInput.setMinimumWidth(0);
+        phoneInput.setMaxLines(1);
+        phoneInput.setSelectAllOnFocus(false);
         phoneInput.setTextColor(INK);
         phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
         phoneInput.setHint("01xxxxxxxxx");
         phoneInput.setInputType(3);
         phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+        phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
         phoneInput.setPadding(dp(14), dp(16), dp(14), dp(16));
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         phoneInput.setBackground(inputBorder(RED));
@@ -114,13 +119,13 @@ public class MainActivity extends Activity {
         phoneRow.addView(phoneInput, phoneParams);
 
         // زر جهات اتصال مدمج حتى لا يقتطع مساحة رقم الهاتف.
-        Button contacts = button("👥", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
+        Button contacts = button("👤", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
         contacts.setTextSize(23);
         contacts.setMinHeight(0);
         contacts.setMinimumHeight(0);
         contacts.setPadding(0, 0, 0, 0);
         contacts.setContentDescription("اختيار رقم من جهات الاتصال");
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(60), dp(68)));
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(56), dp(68)));
         contacts.setOnClickListener(v -> chooseContact());
 
         TextView validation = label("أدخل رقمًا مصريًا من 11 رقمًا", 16, MUTED, false);
