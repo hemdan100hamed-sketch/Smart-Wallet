@@ -96,13 +96,13 @@ public class MainActivity extends Activity {
         serviceCard.addView(amountInput, amountParams);
 
         TextView note = text(
-                "تنبيه: أدخل الرقم والمبلغ مرة أخرى داخل قائمة فودافون بعد فتح الكود. "
-                + "لا يمكن للتطبيق تعبئة خطوات USSD تلقائيًا بصورة موثوقة.",
+                "بعد الضغط على تنفيذ ستفتح شاشة الاتصال الرسمية وكود التحويل مكتوبًا بالكامل. "
+                + "اضغط اتصال فقط، ثم أكمل خطوات فودافون بنفسك.",
                 12, MUTED, false);
         note.setPadding(0, dp(14), 0, dp(16));
         serviceCard.addView(note);
 
-        Button transfer = button("متابعة إلى فودافون كاش");
+        Button transfer = button("تنفيذ التحويل");
         serviceCard.addView(transfer, matchWrap());
         transfer.setOnClickListener(v -> prepareTransfer());
 
@@ -134,33 +134,30 @@ public class MainActivity extends Activity {
             return;
         }
 
-        try {
-            double value = Double.parseDouble(amount);
-            if ((Double.isNaN(value) || Double.isInfinite(value)) || value <= 0) {
-                throw new NumberFormatException();
-            }
-        } catch (NumberFormatException ex) {
-            amountInput.setError("أدخل مبلغًا صحيحًا أكبر من صفر");
+        if (!amount.matches("[0-9]+(\\.[0-9]{1,2})?")) {
+            amountInput.setError("أدخل مبلغًا صحيحًا، ويمكن استخدام منزلتين عشريتين");
             amountInput.requestFocus();
             return;
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("مراجعة بيانات التحويل")
-                .setMessage("رقم المستلم: " + phone
-                        + "\nالمبلغ: " + amount + " جنيه"
-                        + "\n\nسنفتح كود فودافون كاش الرسمي *9*7#."
-                        + "\nاختر شريحة فودافون من شاشة الاتصال، ثم أدخل رقم المستلم والمبلغ "
-                        + "والرقم السري بنفسك داخل قائمة فودافون."
-                        + "\n\nلن يتم تنفيذ التحويل إلا بعد تأكيدك لدى فودافون.")
-                .setNegativeButton("مراجعة البيانات", null)
-                .setPositiveButton("فتح كود الخدمة", (dialog, which) -> openVodafoneCode())
-                .show();
+        try {
+            double value = Double.parseDouble(amount);
+            if (Double.isNaN(value) || Double.isInfinite(value) || value <= 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException ex) {
+            amountInput.setError("أدخل مبلغًا أكبر من صفر");
+            amountInput.requestFocus();
+            return;
+        }
+
+        openVodafoneCode(phone, amount);
     }
 
-    private void openVodafoneCode() {
-        // ACTION_DIAL only opens the dialer; the user must press Call and complete USSD.
-        Uri ussdUri = Uri.parse("tel:*9*7%23");
+    private void openVodafoneCode(String phone, String amount) {
+        // ACTION_DIAL prefills the code only. The user must press Call and complete Vodafone's flow.
+        String ussdCode = "*9*7*" + phone + "*" + amount + "#";
+        Uri ussdUri = Uri.fromParts("tel", ussdCode, null);
         Intent intent = new Intent(Intent.ACTION_DIAL, ussdUri);
         try {
             startActivity(intent);
