@@ -45,37 +45,27 @@ public class MainActivity extends Activity {
 
     private void showHome() {
         LinearLayout page = basePage();
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.VERTICAL);
-        header.setPadding(dp(22), dp(24), dp(22), dp(26));
-        header.setBackground(gradient(DARK_RED, RED, 26));
-        page.addView(header, matchWrap());
-        header.addView(label("SMART WALLET", 17, Color.WHITE, true));
-        TextView heading = label("محفظتك في متناول إيدك", 29, Color.WHITE, true);
-        heading.setPadding(0, dp(14), 0, dp(7));
-        header.addView(heading);
-        header.addView(label("خدمات فودافون كاش بسهولة ووضوح", 18, Color.rgb(255, 230, 235), false));
+        page.setPadding(dp(16), dp(10), dp(16), dp(8));
 
-        TextView section = label("اختر الخدمة", 24, INK, true);
-        section.setPadding(0, dp(25), 0, dp(12));
+        TextView section = label("خدمات فودافون كاش", 21, INK, true);
+        section.setPadding(0, dp(2), 0, dp(10));
         page.addView(section);
 
-        addService(page, "استعلام عن الرصيد", "عرض رصيد محفظتك من خلال خدمة فودافون الرسمية", "◉", BLUE(), v -> openUssd("*9*13#"));
-        addService(page, "تحويل الأموال", "أدخل رقم المستلم والمبلغ أو اختره من جهات الاتصال", "⇄", RED, v -> showTransfer());
-        addService(page, "خدمات أخرى", "ستتم إضافة خدمات فودافون كاش تدريجيًا", "＋", Color.rgb(110, 75, 190), v ->
+        // الأهم أولاً: التحويل ثم الاستعلام عن الرصيد.
+        addService(page, "تحويل الأموال", "إرسال الأموال إلى رقم محمول أو جهة اتصال", "⇄", RED, v -> showTransfer());
+        addService(page, "الاستعلام عن الرصيد", "معرفة رصيد محفظتك عبر خدمة فودافون الرسمية", "◉", BLUE(), v -> openUssd("*9*13#"));
+        addService(page, "خدمات أخرى", "ستتوفر خدمات إضافية في تحديثات قادمة", "＋", Color.rgb(110, 75, 190), v ->
                 Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
 
-        LinearLayout safety = card(page);
-        TextView safeTitle = label("أمانك وخصوصيتك", 20, INK, true);
-        safety.addView(safeTitle);
-        TextView safeText = label("لن يطلب Smart Wallet الرقم السري ولن يحفظه. أدخل الرقم السري وأكمل التأكيد داخل واجهة فودافون الرسمية فقط.", 17, MUTED, false);
-        safeText.setPadding(0, dp(8), 0, 0);
+        LinearLayout safety = compactCard(page);
+        TextView safeText = label("الأمان: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, MUTED, false);
         safety.addView(safeText);
-        TextView version = label("SMART WALLET  •  الإصدار 2.0", 14, MUTED, true);
+        TextView version = label("SMART WALLET  •  2.0", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
-        version.setPadding(0, dp(24), 0, dp(8));
+        version.setPadding(0, dp(2), 0, 0);
         page.addView(version);
-        setContentView(wrapScroll(page));
+        // الصفحة الرئيسية ثابتة بلا تمرير؛ كل الخدمات ظاهرة مباشرة.
+        setContentView(page);
     }
 
     private void showTransfer() {
@@ -244,14 +234,14 @@ public class MainActivity extends Activity {
 
     private void addService(LinearLayout parent, String title, String description, String symbol,
                             int accent, View.OnClickListener action) {
-        LinearLayout box = card(parent);
+        LinearLayout box = compactCard(parent);
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
         box.addView(row, matchWrap());
         TextView icon = label(symbol, 34, accent, true);
         icon.setGravity(Gravity.CENTER);
         icon.setBackground(round(Color.rgb(247, 239, 242), 18));
-        row.addView(icon, new LinearLayout.LayoutParams(dp(68), dp(68)));
+        row.addView(icon, new LinearLayout.LayoutParams(dp(58), dp(58)));
         LinearLayout details = new LinearLayout(this);
         details.setOrientation(LinearLayout.VERTICAL);
         details.setPadding(dp(14), 0, 0, 0);
@@ -280,6 +270,18 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(PAGE);
         scroll.addView(child);
         return scroll;
+    }
+
+    private LinearLayout compactCard(LinearLayout parent) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(13), dp(11), dp(13), dp(11));
+        box.setBackground(round(Color.WHITE, 18));
+        box.setElevation(dp(2));
+        LinearLayout.LayoutParams params = matchWrap();
+        params.bottomMargin = dp(9);
+        parent.addView(box, params);
+        return box;
     }
 
     private LinearLayout card(LinearLayout parent) {
