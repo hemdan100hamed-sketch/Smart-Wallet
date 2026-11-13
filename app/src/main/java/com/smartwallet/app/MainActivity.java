@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(ROYAL_BLUE);
+        getWindow().setStatusBarColor(RED);
         getWindow().setNavigationBarColor(Color.WHITE);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         showHome();
@@ -266,44 +266,6 @@ public class MainActivity extends Activity {
         pin = null;
         openUssd(ussd);
         ussd = null;
-    }
-
-    private void showHome_OLD() {
-        LinearLayout page = basePage();
-        page.setPadding(dp(16), dp(14), dp(16), dp(8));
-
-        LinearLayout brandRow = new LinearLayout(this);
-        brandRow.setGravity(Gravity.CENTER_VERTICAL);
-        brandRow.setPadding(dp(2), dp(2), dp(2), dp(12));
-        TextView brandIcon = label("◈", 31, ROYAL_BLUE, true);
-        brandIcon.setGravity(Gravity.CENTER);
-        brandIcon.setBackground(round(Color.rgb(225, 237, 255), 14));
-        brandRow.addView(brandIcon, new LinearLayout.LayoutParams(dp(54), dp(54)));
-        TextView brand = label("Smart Wallet", 25, NAVY, true);
-        brand.setPadding(dp(12), 0, 0, 0);
-        brandRow.addView(brand, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        page.addView(brandRow);
-
-        TextView section = label("خدمات فودافون كاش", 19, MUTED, true);
-        section.setPadding(dp(2), 0, 0, dp(10));
-        page.addView(section);
-
-        addService(page, "الاستعلام عن الرصيد", "اعرف رصيد محفظتك بسهولة وأمان", "◉", ROYAL_BLUE, v -> openUssd("*9*13#"));
-        addService(page, "تحويل الأموال", "حوّل الأموال إلى رقم محمول أو جهة اتصال", "⇄", TEAL, v -> showTransfer());
-        addService(page, "خدمات أخرى", "خدمات إضافية قريبًا", "✦", NAVY, v ->
-                Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
-
-        LinearLayout safety = compactCard(page);
-        safety.setBackground(round(Color.rgb(232, 242, 255), 16));
-        TextView safeText = label("الأمان أولاً: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, NAVY, false);
-        safety.addView(safeText);
-        TextView version = label("SMART WALLET  •  3.4", 12, MUTED, true);
-        version.setGravity(Gravity.CENTER);
-        version.setPadding(0, dp(2), 0, 0);
-        page.addView(version);
-
-        page.setBackground(round(PAGE, 22));
-        setContentView(page);
     }
 
     private void showTransfer() {
@@ -667,7 +629,7 @@ public class MainActivity extends Activity {
     private View redFrame(View child) {
         LinearLayout frame = new LinearLayout(this);
         frame.setOrientation(LinearLayout.VERTICAL);
-        frame.setPadding(dp(3), dp(3), dp(3), dp(3));
+        frame.setPadding(dp(5), dp(5), dp(5), dp(5));
         frame.setBackground(round(RED, 22));
         frame.addView(child, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
