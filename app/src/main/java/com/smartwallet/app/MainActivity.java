@@ -27,12 +27,16 @@ import org.json.JSONObject;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private static final int RED = Color.rgb(210, 0, 30);
-    private static final int DARK_RED = Color.rgb(145, 0, 25);
+    private static final int RED = Color.rgb(198, 66, 75);
+    private static final int DARK_RED = Color.rgb(23, 105, 224);
     private static final int GREEN = Color.rgb(22, 163, 74);
     private static final int INK = Color.rgb(28, 37, 51);
     private static final int MUTED = Color.rgb(91, 103, 120);
-    private static final int PAGE = Color.rgb(250, 244, 233);
+    private static final int PAGE = Color.rgb(244, 247, 252);
+    private static final int ROYAL_BLUE = Color.rgb(23, 105, 224);
+    private static final int TEAL = Color.rgb(8, 127, 140);
+    private static final int NAVY = Color.rgb(39, 54, 83);
+    private static final int FIELD_BORDER = Color.rgb(211, 219, 230);
     private static final int CONTACT_PICKER = 410;
     private static final String PREFS = "smart_wallet_preferences";
     private static final String FAVORITES_KEY = "favorite_recipients";
@@ -43,7 +47,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(DARK_RED);
+        getWindow().setStatusBarColor(ROYAL_BLUE);
         getWindow().setNavigationBarColor(Color.WHITE);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         showHome();
@@ -51,35 +55,40 @@ public class MainActivity extends Activity {
 
     private void showHome() {
         LinearLayout page = basePage();
-        page.setPadding(dp(16), dp(10), dp(16), dp(8));
+        page.setPadding(dp(16), dp(14), dp(16), dp(8));
 
-        TextView section = label("خدمات فودافون كاش", 21, INK, true);
-        section.setPadding(0, dp(2), 0, dp(10));
+        LinearLayout brandRow = new LinearLayout(this);
+        brandRow.setGravity(Gravity.CENTER_VERTICAL);
+        brandRow.setPadding(dp(2), dp(2), dp(2), dp(12));
+        TextView brandIcon = label("◈", 31, ROYAL_BLUE, true);
+        brandIcon.setGravity(Gravity.CENTER);
+        brandIcon.setBackground(round(Color.rgb(225, 237, 255), 14));
+        brandRow.addView(brandIcon, new LinearLayout.LayoutParams(dp(54), dp(54)));
+        TextView brand = label("Smart Wallet", 25, NAVY, true);
+        brand.setPadding(dp(12), 0, 0, 0);
+        brandRow.addView(brand, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        page.addView(brandRow);
+
+        TextView section = label("خدمات فودافون كاش", 19, MUTED, true);
+        section.setPadding(dp(2), 0, 0, dp(10));
         page.addView(section);
 
-        // ترتيب الخدمات: الاستعلام عن الرصيد أولاً ثم تحويل الأموال.
-        addService(page, "الاستعلام عن الرصيد", "معرفة رصيد محفظتك عبر خدمة فودافون الرسمية", "▣", BLUE(), v -> openUssd("*9*13#"));
-        addService(page, "تحويل الأموال", "إرسال الأموال إلى رقم محمول أو جهة اتصال", "⇄", RED, v -> showTransfer());
-        addService(page, "خدمات أخرى", "ستتوفر خدمات إضافية في تحديثات قادمة", "＋", Color.rgb(110, 75, 190), v ->
+        addService(page, "الاستعلام عن الرصيد", "اعرف رصيد محفظتك بسهولة وأمان", "◉", ROYAL_BLUE, v -> openUssd("*9*13#"));
+        addService(page, "تحويل الأموال", "حوّل الأموال إلى رقم محمول أو جهة اتصال", "⇄", TEAL, v -> showTransfer());
+        addService(page, "خدمات أخرى", "خدمات إضافية قريبًا", "✦", NAVY, v ->
                 Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
 
         LinearLayout safety = compactCard(page);
-        safety.setBackground(round(Color.rgb(255, 249, 225), 16));
-        TextView safeText = label("الأمان: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, INK, false);
+        safety.setBackground(round(Color.rgb(232, 242, 255), 16));
+        TextView safeText = label("الأمان أولاً: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, NAVY, false);
         safety.addView(safeText);
-        TextView version = label("SMART WALLET  •  3.2 TEST", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  3.4", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         version.setPadding(0, dp(2), 0, 0);
         page.addView(version);
-        // الصفحة الرئيسية ثابتة بلا تمرير؛ كل الخدمات ظاهرة مباشرة.
-        LinearLayout frame = new LinearLayout(this);
-        frame.setOrientation(LinearLayout.VERTICAL);
-        frame.setPadding(dp(5), dp(5), dp(5), dp(5));
-        frame.setBackground(round(DARK_RED, 26));
+
         page.setBackground(round(PAGE, 22));
-        frame.addView(page, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        setContentView(frame);
+        setContentView(page);
     }
 
     private void showTransfer() {
@@ -93,7 +102,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams formParams = (LinearLayout.LayoutParams) form.getLayoutParams();
         formParams.topMargin = dp(10);
         form.setLayoutParams(formParams);
-        TextView phoneLabel = label("رقم هاتف المستلم", 21, INK, true);
+        TextView phoneLabel = label("تحويل إلى", 27, NAVY, true);
         phoneLabel.setPadding(0, 0, 0, dp(10));
         form.addView(phoneLabel);
 
@@ -115,24 +124,24 @@ public class MainActivity extends Activity {
         phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
         phoneInput.setHint("");
         phoneInput.setInputType(3);
-        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
         phoneInput.setPadding(dp(10), dp(10), dp(8), dp(10));
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         phoneInput.setBackgroundColor(Color.TRANSPARENT);
-        phoneRow.setPadding(dp(5), dp(3), dp(5), dp(3));
-        phoneRow.setBackground(inputBorder(RED));
+        phoneRow.setPadding(dp(8), dp(5), dp(8), dp(5));
+        phoneRow.setBackground(inputBorder(FIELD_BORDER));
         LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(76), 1f);
         phoneParams.rightMargin = dp(3);
         phoneRow.addView(phoneInput, phoneParams);
 
         // الأيقونتان داخل نفس إطار حقل الرقم، مع مساحة كافية لعرض الرقم كاملًا.
-        Button contacts = button("👤", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
+        Button contacts = button("♙", Color.TRANSPARENT, Color.rgb(198, 66, 75));
         styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
         phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(46), dp(58)));
         contacts.setOnClickListener(v -> chooseContact());
 
-        Button favorites = button("★", Color.rgb(255, 242, 205), Color.rgb(150, 105, 0));
+        Button favorites = button("♡", Color.TRANSPARENT, Color.rgb(198, 66, 75));
         styleInlineIcon(favorites, "الأرقام المفضلة");
         LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(dp(46), dp(58));
         favoriteParams.leftMargin = dp(3);
@@ -147,7 +156,7 @@ public class MainActivity extends Activity {
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String value = s.toString().trim();
                 boolean valid = value.matches("01[0125][0-9]{8}");
-                phoneInput.setBackground(inputBorder(valid ? GREEN : RED));
+                phoneInput.setBackgroundColor(Color.TRANSPARENT);
                 if (valid) {
                     validation.setText("✓ رقم صحيح ومكتمل");
                     validation.setTextColor(GREEN);
@@ -165,13 +174,16 @@ public class MainActivity extends Activity {
         amountInput = new EditText(this);
         amountInput.setSingleLine(true);
         amountInput.setTextSize(23);
+        amountInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        amountInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        amountInput.setTextDirection(View.TEXT_DIRECTION_LTR);
         amountInput.setTextColor(INK);
         amountInput.setHintTextColor(Color.rgb(145, 153, 165));
         amountInput.setHint("");
         amountInput.setInputType(8194);
         amountInput.setPadding(dp(14), dp(16), dp(14), dp(16));
-        amountInput.setBackground(inputBorder(Color.rgb(190, 198, 208)));
-        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+        amountInput.setBackground(inputBorder(FIELD_BORDER));
+        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(76)));
 
         TextView note = label("بعد التنفيذ ستفتح شاشة الاتصال بالكود جاهزًا. اضغط اتصال، ثم أكمل خطوات فودافون بنفسك.", 16, MUTED, false);
         note.setPadding(0, dp(14), 0, dp(16));
@@ -187,14 +199,14 @@ public class MainActivity extends Activity {
     }
 
     private void styleInlineIcon(Button button, String description) {
-        button.setTextSize(21);
+        button.setTextSize(29);
         button.setMinHeight(0);
         button.setMinimumHeight(0);
         button.setMinWidth(0);
         button.setMinimumWidth(0);
         button.setPadding(0, 0, 0, 0);
         button.setContentDescription(description);
-        button.setBackground(round(Color.rgb(235, 241, 248), 12));
+        button.setBackgroundColor(Color.TRANSPARENT);
     }
 
     private JSONArray readFavorites() {
@@ -401,11 +413,8 @@ public class MainActivity extends Activity {
     private void addService(LinearLayout parent, String title, String description, String symbol,
                             int accent, View.OnClickListener action) {
         LinearLayout box = compactCard(parent);
-        int fill;
-        if (accent == RED) fill = Color.rgb(35, 112, 75);                 // أخضر زمردي للتحويل
-        else if (accent == BLUE()) fill = Color.rgb(20, 48, 105);         // أزرق غامق للاستعلام
-        else fill = Color.rgb(77, 91, 135);                               // أزرق هادئ للخدمات الأخرى
-        box.setBackground(round(fill, 18));
+        int fill = accent;
+        box.setBackground(gradient(fill, accent == ROYAL_BLUE ? Color.rgb(48, 145, 255) : (accent == TEAL ? Color.rgb(16, 166, 173) : Color.rgb(65, 83, 119)), 20));
         box.setPadding(dp(13), dp(11), dp(13), dp(11));
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -422,7 +431,7 @@ public class MainActivity extends Activity {
         TextView desc = label(description, 15, Color.rgb(246, 246, 246), false);
         desc.setPadding(0, dp(5), 0, 0);
         details.addView(desc);
-        GradientDrawable serviceBorder = round(fill, 18);
+        GradientDrawable serviceBorder = gradient(fill, accent == ROYAL_BLUE ? Color.rgb(48, 145, 255) : (accent == TEAL ? Color.rgb(16, 166, 173) : Color.rgb(65, 83, 119)), 20);
         serviceBorder.setStroke(dp(1), Color.argb(90, 255, 255, 255));
         box.setBackground(serviceBorder);
         box.setOnClickListener(action);
@@ -497,7 +506,7 @@ public class MainActivity extends Activity {
 
     private GradientDrawable inputBorder(int stroke) {
         GradientDrawable d = round(Color.WHITE, 15);
-        d.setStroke(dp(2), stroke);
+        d.setStroke(dp(1), stroke);
         return d;
     }
 
