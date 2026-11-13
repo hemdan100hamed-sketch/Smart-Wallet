@@ -2,7 +2,7 @@ name: Build Smart Wallet APK
 
 on:
   push:
-    branches: [ "main", "transfer-prefill-ui" ]
+    branches: [ "main", "transfer-prefill-ui", "smart-wallet-v2" ]
   workflow_dispatch:
 
 permissions:
@@ -29,8 +29,6 @@ jobs:
             echo "Android SDK manager was not found."
             exit 1
           fi
-          # sdkmanager closes the input pipe after accepting all licenses.
-          # Ignore the resulting SIGPIPE from yes, but keep package-install errors fatal.
           yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
@@ -45,7 +43,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Smart-Wallet-debug
+          name: Smart-Wallet-v2-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
