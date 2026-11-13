@@ -109,11 +109,13 @@ public class MainActivity extends Activity {
         LinearLayout phoneRow = new LinearLayout(this);
         phoneRow.setOrientation(LinearLayout.HORIZONTAL);
         phoneRow.setGravity(Gravity.CENTER_VERTICAL);
+        // ترتيب مادي ثابت: المفضلة أقصى اليسار، ثم جهات الاتصال، ثم حقل الرقم الواسع.
+        phoneRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         form.addView(phoneRow, matchWrap());
 
         phoneInput = new EditText(this);
         phoneInput.setSingleLine(true);
-        phoneInput.setTextSize(21);
+        phoneInput.setTextSize(19);
         phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         phoneInput.setHorizontallyScrolling(true);
         phoneInput.setMinWidth(0);
@@ -126,27 +128,26 @@ public class MainActivity extends Activity {
         phoneInput.setInputType(3);
         phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
-        phoneInput.setPadding(dp(10), dp(10), dp(8), dp(10));
+        phoneInput.setPadding(dp(3), dp(8), dp(3), dp(8));
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         phoneInput.setBackgroundColor(Color.TRANSPARENT);
-        phoneRow.setPadding(dp(8), dp(5), dp(8), dp(5));
-        phoneRow.setBackground(inputBorder(FIELD_BORDER));
-        LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(76), 1f);
-        phoneParams.rightMargin = dp(3);
-        phoneRow.addView(phoneInput, phoneParams);
 
-        // الأيقونتان داخل نفس إطار حقل الرقم، مع مساحة كافية لعرض الرقم كاملًا.
-        Button contacts = button("♙", Color.TRANSPARENT, Color.rgb(198, 66, 75));
+        Button favorites = button("♡", Color.TRANSPARENT, RED);
+        styleInlineIcon(favorites, "الأرقام المفضلة");
+        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        favorites.setOnClickListener(v -> showFavorites());
+
+        Button contacts = button("👤", Color.TRANSPARENT, RED);
         styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(46), dp(58)));
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(40), dp(58)));
         contacts.setOnClickListener(v -> chooseContact());
 
-        Button favorites = button("♡", Color.TRANSPARENT, Color.rgb(198, 66, 75));
-        styleInlineIcon(favorites, "الأرقام المفضلة");
-        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(dp(46), dp(58));
-        favoriteParams.leftMargin = dp(3);
-        phoneRow.addView(favorites, favoriteParams);
-        favorites.setOnClickListener(v -> showFavorites());
+        LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(76), 1f);
+        phoneParams.leftMargin = dp(2);
+        phoneRow.addView(phoneInput, phoneParams);
+
+        phoneRow.setPadding(dp(5), dp(5), dp(5), dp(5));
+        phoneRow.setBackground(inputBorder(FIELD_BORDER));
 
         TextView validation = label("أدخل رقمًا مصريًا من 11 رقمًا", 16, MUTED, false);
         validation.setPadding(0, dp(9), 0, dp(16));
@@ -195,7 +196,7 @@ public class MainActivity extends Activity {
         TextView safe = label("لن نطلب الرقم السري أو نحفظه داخل التطبيق.", 16, GREEN, true);
         safe.setPadding(0, dp(18), 0, dp(8));
         page.addView(safe);
-        setContentView(wrapScroll(page));
+        setContentView(wrapScroll(redFrame(page)));
     }
 
     private void styleInlineIcon(Button button, String description) {
@@ -446,6 +447,16 @@ public class MainActivity extends Activity {
         page.setPadding(dp(18), dp(18), dp(18), dp(26));
         page.setBackgroundColor(PAGE);
         return page;
+    }
+
+    private View redFrame(View child) {
+        LinearLayout frame = new LinearLayout(this);
+        frame.setOrientation(LinearLayout.VERTICAL);
+        frame.setPadding(dp(3), dp(3), dp(3), dp(3));
+        frame.setBackground(round(RED, 22));
+        frame.addView(child, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        return frame;
     }
 
     private ScrollView wrapScroll(View child) {
