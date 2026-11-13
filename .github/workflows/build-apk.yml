@@ -29,11 +29,9 @@ jobs:
             echo "Android SDK manager was not found."
             exit 1
           fi
-          # sdkmanager exits after reading all licenses; yes may receive SIGPIPE.
-          # Disable pipefail only for this license-acceptance pipeline.
-          set +o pipefail
-          yes | "$SDKMANAGER" --licenses >/dev/null
-          set -o pipefail
+          # sdkmanager closes the input pipe after accepting all licenses.
+          # Ignore the resulting SIGPIPE from yes, but keep package-install errors fatal.
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle 8.9
