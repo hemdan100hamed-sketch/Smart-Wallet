@@ -1,8 +1,10 @@
 package com.smartwallet.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -16,10 +18,12 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -30,6 +34,8 @@ public class MainActivity extends Activity {
     private static final int MUTED = Color.rgb(91, 103, 120);
     private static final int PAGE = Color.rgb(250, 244, 233);
     private static final int CONTACT_PICKER = 410;
+    private static final String PREFS = "smart_wallet_preferences";
+    private static final String FAVORITES_KEY = "favorite_recipients";
 
     private EditText phoneInput;
     private EditText amountInput;
@@ -51,9 +57,9 @@ public class MainActivity extends Activity {
         section.setPadding(0, dp(2), 0, dp(10));
         page.addView(section);
 
-        // الأهم أولاً: التحويل ثم الاستعلام عن الرصيد.
-        addService(page, "تحويل الأموال", "إرسال الأموال إلى رقم محمول أو جهة اتصال", "⇄", RED, v -> showTransfer());
+        // ترتيب الخدمات: الاستعلام عن الرصيد أولاً ثم تحويل الأموال.
         addService(page, "الاستعلام عن الرصيد", "معرفة رصيد محفظتك عبر خدمة فودافون الرسمية", "▣", BLUE(), v -> openUssd("*9*13#"));
+        addService(page, "تحويل الأموال", "إرسال الأموال إلى رقم محمول أو جهة اتصال", "⇄", RED, v -> showTransfer());
         addService(page, "خدمات أخرى", "ستتوفر خدمات إضافية في تحديثات قادمة", "＋", Color.rgb(110, 75, 190), v ->
                 Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
 
@@ -83,7 +89,7 @@ public class MainActivity extends Activity {
         page.addView(back, matchWrap());
 
         LinearLayout form = card(page);
-        form.setPadding(dp(14), dp(12), dp(14), dp(12));
+        form.setPadding(dp(8), dp(12), dp(8), dp(12));
         LinearLayout.LayoutParams formParams = (LinearLayout.LayoutParams) form.getLayoutParams();
         formParams.topMargin = dp(10);
         form.setLayoutParams(formParams);
@@ -111,22 +117,27 @@ public class MainActivity extends Activity {
         phoneInput.setInputType(3);
         phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
         phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
-        phoneInput.setPadding(dp(14), dp(16), dp(14), dp(16));
+        phoneInput.setPadding(dp(10), dp(10), dp(8), dp(10));
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        phoneInput.setBackground(inputBorder(RED));
-        LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(68), 1f);
-        phoneParams.rightMargin = dp(8);
+        phoneInput.setBackgroundColor(Color.TRANSPARENT);
+        phoneRow.setPadding(dp(5), dp(3), dp(5), dp(3));
+        phoneRow.setBackground(inputBorder(RED));
+        LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(76), 1f);
+        phoneParams.rightMargin = dp(3);
         phoneRow.addView(phoneInput, phoneParams);
 
-        // زر جهات اتصال مدمج حتى لا يقتطع مساحة رقم الهاتف.
+        // الأيقونتان داخل نفس إطار حقل الرقم، مع مساحة كافية لعرض الرقم كاملًا.
         Button contacts = button("👤", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
-        contacts.setTextSize(23);
-        contacts.setMinHeight(0);
-        contacts.setMinimumHeight(0);
-        contacts.setPadding(0, 0, 0, 0);
-        contacts.setContentDescription("اختيار رقم من جهات الاتصال");
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(56), dp(68)));
+        styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(46), dp(58)));
         contacts.setOnClickListener(v -> chooseContact());
+
+        Button favorites = button("★", Color.rgb(255, 242, 205), Color.rgb(150, 105, 0));
+        styleInlineIcon(favorites, "الأرقام المفضلة");
+        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(dp(46), dp(58));
+        favoriteParams.leftMargin = dp(3);
+        phoneRow.addView(favorites, favoriteParams);
+        favorites.setOnClickListener(v -> showFavorites());
 
         TextView validation = label("أدخل رقمًا مصريًا من 11 رقمًا", 16, MUTED, false);
         validation.setPadding(0, dp(9), 0, dp(16));
@@ -173,6 +184,150 @@ public class MainActivity extends Activity {
         safe.setPadding(0, dp(18), 0, dp(8));
         page.addView(safe);
         setContentView(wrapScroll(page));
+    }
+
+    private void styleInlineIcon(Button button, String description) {
+        button.setTextSize(21);
+        button.setMinHeight(0);
+        button.setMinimumHeight(0);
+        button.setMinWidth(0);
+        button.setMinimumWidth(0);
+        button.setPadding(0, 0, 0, 0);
+        button.setContentDescription(description);
+        button.setBackground(round(Color.rgb(235, 241, 248), 12));
+    }
+
+    private JSONArray readFavorites() {
+        String raw = getSharedPreferences(PREFS, MODE_PRIVATE).getString(FAVORITES_KEY, "[]");
+        try {
+            return new JSONArray(raw);
+        } catch (Exception ex) {
+            return new JSONArray();
+        }
+    }
+
+    private void saveFavorites(JSONArray favorites) {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putString(FAVORITES_KEY, favorites.toString()).apply();
+    }
+
+    private void showFavorites() {
+        JSONArray favorites = readFavorites();
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(18), dp(10), dp(18), dp(8));
+
+        Button saveCurrent = button("＋ حفظ الرقم المكتوب في المفضلة", Color.rgb(35, 112, 75), Color.WHITE);
+        content.addView(saveCurrent, matchWrap());
+        saveCurrent.setOnClickListener(v -> {
+            String current = phoneInput.getText().toString().trim();
+            if (!current.matches("01[0125][0-9]{8}")) {
+                Toast.makeText(this, "اكتب رقمًا مصريًا صحيحًا أولاً لحفظه.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            showSaveFavoriteDialog(current);
+        });
+
+        if (favorites.length() == 0) {
+            TextView empty = label("لا توجد أرقام محفوظة حتى الآن.", 17, MUTED, false);
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, dp(22), 0, dp(18));
+            content.addView(empty);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("الأرقام المفضلة")
+                .setView(content)
+                .setNegativeButton("إغلاق", null)
+                .create();
+
+        for (int i = 0; i < favorites.length(); i++) {
+            JSONObject item = favorites.optJSONObject(i);
+            if (item == null) continue;
+            final String number = item.optString("phone", "");
+            final String name = item.optString("name", "رقم محفوظ");
+            LinearLayout row = new LinearLayout(this);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, dp(8), 0, dp(8));
+            TextView details = label(name + "\\n" + number, 17, INK, true);
+            row.addView(details, new LinearLayout.LayoutParams(0, dp(62), 1f));
+            Button choose = button("اختيار", Color.rgb(35, 112, 75), Color.WHITE);
+            choose.setTextSize(14);
+            choose.setMinHeight(dp(46));
+            row.addView(choose, new LinearLayout.LayoutParams(dp(82), dp(48)));
+            choose.setOnClickListener(v -> {
+                phoneInput.setText(number);
+                dialog.dismiss();
+            });
+            Button remove = button("×", Color.rgb(255, 230, 230), RED);
+            remove.setTextSize(22);
+            remove.setMinHeight(dp(46));
+            LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(dp(46), dp(48));
+            removeParams.leftMargin = dp(5);
+            row.addView(remove, removeParams);
+            remove.setOnClickListener(v -> {
+                removeFavorite(number);
+                dialog.dismiss();
+                showFavorites();
+            });
+            content.addView(row);
+            View line = new View(this);
+            line.setBackgroundColor(Color.rgb(230, 230, 230));
+            content.addView(line, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
+        }
+        dialog.show();
+    }
+
+    private void showSaveFavoriteDialog(String number) {
+        EditText nameInput = new EditText(this);
+        nameInput.setSingleLine(true);
+        nameInput.setTextSize(18);
+        nameInput.setHint("اسم صاحب الرقم (اختياري)");
+        nameInput.setText("رقم " + number);
+        nameInput.setSelectAllOnFocus(true);
+        LinearLayout holder = new LinearLayout(this);
+        holder.setPadding(dp(20), dp(8), dp(20), 0);
+        holder.addView(nameInput, matchWrap());
+        new AlertDialog.Builder(this)
+                .setTitle("حفظ في المفضلة")
+                .setMessage("يمكنك تعديل الاسم الذي سيظهر بجوار الرقم.")
+                .setView(holder)
+                .setNegativeButton("إلغاء", null)
+                .setPositiveButton("حفظ", (d, which) -> {
+                    JSONArray list = readFavorites();
+                    for (int i = 0; i < list.length(); i++) {
+                        JSONObject item = list.optJSONObject(i);
+                        if (item != null && number.equals(item.optString("phone"))) {
+                            Toast.makeText(this, "هذا الرقم محفوظ بالفعل في المفضلة.", Toast.LENGTH_LONG).show();
+                            showFavorites();
+                            return;
+                        }
+                    }
+                    try {
+                        JSONObject item = new JSONObject();
+                        String name = nameInput.getText().toString().trim();
+                        item.put("name", name.isEmpty() ? "رقم " + number : name);
+                        item.put("phone", number);
+                        list.put(item);
+                        saveFavorites(list);
+                        Toast.makeText(this, "تم حفظ الرقم في المفضلة.", Toast.LENGTH_SHORT).show();
+                    } catch (Exception ex) {
+                        Toast.makeText(this, "تعذر حفظ الرقم.", Toast.LENGTH_LONG).show();
+                    }
+                    showFavorites();
+                }).show();
+    }
+
+    private void removeFavorite(String number) {
+        JSONArray oldList = readFavorites();
+        JSONArray newList = new JSONArray();
+        for (int i = 0; i < oldList.length(); i++) {
+            JSONObject item = oldList.optJSONObject(i);
+            if (item != null && !number.equals(item.optString("phone"))) newList.put(item);
+        }
+        saveFavorites(newList);
+        Toast.makeText(this, "تم حذف الرقم من المفضلة.", Toast.LENGTH_SHORT).show();
     }
 
     private void prepareTransfer() {
@@ -248,7 +403,7 @@ public class MainActivity extends Activity {
         LinearLayout box = compactCard(parent);
         int fill;
         if (accent == RED) fill = Color.rgb(35, 112, 75);                 // أخضر زمردي للتحويل
-        else if (accent == BLUE()) fill = Color.rgb(143, 91, 54);         // بني دافئ للاستعلام
+        else if (accent == BLUE()) fill = Color.rgb(20, 48, 105);         // أزرق غامق للاستعلام
         else fill = Color.rgb(77, 91, 135);                               // أزرق هادئ للخدمات الأخرى
         box.setBackground(round(fill, 18));
         box.setPadding(dp(13), dp(11), dp(13), dp(11));
