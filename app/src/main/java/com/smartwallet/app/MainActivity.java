@@ -65,7 +65,14 @@ public class MainActivity extends Activity {
         version.setPadding(0, dp(2), 0, 0);
         page.addView(version);
         // الصفحة الرئيسية ثابتة بلا تمرير؛ كل الخدمات ظاهرة مباشرة.
-        setContentView(page);
+        LinearLayout frame = new LinearLayout(this);
+        frame.setOrientation(LinearLayout.VERTICAL);
+        frame.setPadding(dp(5), dp(5), dp(5), dp(5));
+        frame.setBackground(round(DARK_RED, 26));
+        page.setBackground(round(PAGE, 22));
+        frame.addView(page, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(frame);
     }
 
     private void showTransfer() {
@@ -107,7 +114,7 @@ public class MainActivity extends Activity {
         phoneInput.setSelectAllOnFocus(false);
         phoneInput.setTextColor(INK);
         phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
-        phoneInput.setHint("01xxxxxxxxx");
+        phoneInput.setHint("");
         phoneInput.setInputType(3);
         phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
         phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
@@ -156,7 +163,7 @@ public class MainActivity extends Activity {
         amountInput.setTextSize(23);
         amountInput.setTextColor(INK);
         amountInput.setHintTextColor(Color.rgb(145, 153, 165));
-        amountInput.setHint("أدخل المبلغ");
+        amountInput.setHint("");
         amountInput.setInputType(8194);
         amountInput.setPadding(dp(14), dp(16), dp(14), dp(16));
         amountInput.setBackground(inputBorder(Color.rgb(190, 198, 208)));
@@ -251,7 +258,10 @@ public class MainActivity extends Activity {
         box.addView(row, matchWrap());
         TextView icon = label(symbol, 34, accent, true);
         icon.setGravity(Gravity.CENTER);
-        icon.setBackground(round(Color.rgb(247, 239, 242), 18));
+        int softAccent = Color.rgb(248, 238, 241);
+        if (accent == BLUE()) softAccent = Color.rgb(232, 243, 255);
+        else if (accent == Color.rgb(110, 75, 190)) softAccent = Color.rgb(242, 237, 252);
+        icon.setBackground(round(softAccent, 16));
         row.addView(icon, new LinearLayout.LayoutParams(dp(58), dp(58)));
         LinearLayout details = new LinearLayout(this);
         details.setOrientation(LinearLayout.VERTICAL);
@@ -261,6 +271,9 @@ public class MainActivity extends Activity {
         TextView desc = label(description, 15, MUTED, false);
         desc.setPadding(0, dp(5), 0, 0);
         details.addView(desc);
+        GradientDrawable serviceBorder = round(Color.WHITE, 18);
+        serviceBorder.setStroke(dp(2), accent);
+        box.setBackground(serviceBorder);
         box.setOnClickListener(action);
         box.setFocusable(true);
         box.setClickable(true);
