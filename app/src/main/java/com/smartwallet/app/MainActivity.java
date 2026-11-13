@@ -1,20 +1,20 @@
 package com.smartwallet.app;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.InputType;
+import android.provider.ContactsContract;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -22,14 +22,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Locale;
-
 public class MainActivity extends Activity {
-    private static final int RED = Color.rgb(200, 16, 46);
-    private static final int DARK_RED = Color.rgb(143, 11, 33);
-    private static final int INK = Color.rgb(35, 39, 47);
-    private static final int MUTED = Color.rgb(112, 119, 130);
-    private static final int PAGE = Color.rgb(247, 248, 250);
+    private static final int RED = Color.rgb(210, 0, 30);
+    private static final int DARK_RED = Color.rgb(145, 0, 25);
+    private static final int GREEN = Color.rgb(22, 163, 74);
+    private static final int INK = Color.rgb(28, 37, 51);
+    private static final int MUTED = Color.rgb(91, 103, 120);
+    private static final int PAGE = Color.rgb(247, 249, 252);
+    private static final int CONTACT_PICKER = 410;
 
     private EditText phoneInput;
     private EditText amountInput;
@@ -40,132 +40,246 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(DARK_RED);
         getWindow().setNavigationBarColor(Color.WHITE);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        buildScreen();
+        showHome();
     }
 
-    private void buildScreen() {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(PAGE);
+    private void showHome() {
+        LinearLayout page = basePage();
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.VERTICAL);
+        header.setPadding(dp(22), dp(24), dp(22), dp(26));
+        header.setBackground(gradient(DARK_RED, RED, 26));
+        page.addView(header, matchWrap());
+        header.addView(label("SMART WALLET", 17, Color.WHITE, true));
+        TextView heading = label("محفظتك في متناول إيدك", 29, Color.WHITE, true);
+        heading.setPadding(0, dp(14), 0, dp(7));
+        header.addView(heading);
+        header.addView(label("خدمات فودافون كاش بسهولة ووضوح", 18, Color.rgb(255, 230, 235), false));
 
-        LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        page.setPadding(dp(20), dp(18), dp(20), dp(28));
-        scroll.addView(page);
+        TextView section = label("اختر الخدمة", 24, INK, true);
+        section.setPadding(0, dp(25), 0, dp(12));
+        page.addView(section);
+
+        addService(page, "استعلام عن الرصيد", "عرض رصيد محفظتك من خلال خدمة فودافون الرسمية", "◉", BLUE(), v -> openUssd("*9*13#"));
+        addService(page, "تحويل الأموال", "أدخل رقم المستلم والمبلغ أو اختره من جهات الاتصال", "⇄", RED, v -> showTransfer());
+        addService(page, "خدمات أخرى", "ستتم إضافة خدمات فودافون كاش تدريجيًا", "＋", Color.rgb(110, 75, 190), v ->
+                Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
+
+        LinearLayout safety = card(page);
+        TextView safeTitle = label("أمانك وخصوصيتك", 20, INK, true);
+        safety.addView(safeTitle);
+        TextView safeText = label("لن يطلب Smart Wallet الرقم السري ولن يحفظه. أدخل الرقم السري وأكمل التأكيد داخل واجهة فودافون الرسمية فقط.", 17, MUTED, false);
+        safeText.setPadding(0, dp(8), 0, 0);
+        safety.addView(safeText);
+        TextView version = label("SMART WALLET  •  الإصدار 2.0", 14, MUTED, true);
+        version.setGravity(Gravity.CENTER);
+        version.setPadding(0, dp(24), 0, dp(8));
+        page.addView(version);
+        setContentView(wrapScroll(page));
+    }
+
+    private void showTransfer() {
+        LinearLayout page = basePage();
+        Button back = button("رجوع إلى الرئيسية", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> showHome());
+        page.addView(back, matchWrap());
 
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.VERTICAL);
-        header.setPadding(dp(22), dp(22), dp(22), dp(24));
-        header.setBackground(roundGradient(DARK_RED, RED, 24));
-        page.addView(header, matchWrap());
+        header.setPadding(dp(20), dp(20), dp(20), dp(22));
+        header.setBackground(gradient(DARK_RED, RED, 24));
+        LinearLayout.LayoutParams hp = matchWrap();
+        hp.topMargin = dp(14);
+        page.addView(header, hp);
+        header.addView(label("تحويل أموال", 28, Color.WHITE, true));
+        TextView hint = label("إلى أي رقم محمول داخل الشبكة", 18, Color.WHITE, false);
+        hint.setPadding(0, dp(7), 0, 0);
+        header.addView(hint);
 
-        TextView brand = text("SMART WALLET", 13, Color.WHITE, true);
-        brand.setLetterSpacing(0.08f);
-        header.addView(brand);
+        LinearLayout form = card(page);
+        TextView phoneLabel = label("رقم هاتف المستلم", 21, INK, true);
+        phoneLabel.setPadding(0, 0, 0, dp(10));
+        form.addView(phoneLabel);
 
-        TextView title = text("محفظتك في متناول إيدك", 25, Color.WHITE, true);
-        title.setPadding(0, dp(12), 0, dp(5));
-        header.addView(title);
+        LinearLayout phoneRow = new LinearLayout(this);
+        phoneRow.setOrientation(LinearLayout.HORIZONTAL);
+        phoneRow.setGravity(Gravity.CENTER_VERTICAL);
+        form.addView(phoneRow, matchWrap());
 
-        TextView subtitle = text("اختصارات سهلة لخدمات فودافون كاش", 14,
-                Color.rgb(255, 224, 230), false);
-        header.addView(subtitle);
+        phoneInput = new EditText(this);
+        phoneInput.setSingleLine(true);
+        phoneInput.setTextSize(23);
+        phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        phoneInput.setTextColor(INK);
+        phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
+        phoneInput.setHint("01xxxxxxxxx");
+        phoneInput.setInputType(3);
+        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+        phoneInput.setPadding(dp(14), dp(16), dp(14), dp(16));
+        phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        phoneInput.setBackground(inputBorder(RED));
+        LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(68), 1f);
+        phoneParams.rightMargin = dp(10);
+        phoneRow.addView(phoneInput, phoneParams);
 
-        TextView section = text("الخدمات", 19, INK, true);
-        section.setPadding(0, dp(24), 0, dp(12));
-        page.addView(section);
+        Button contacts = button("جهات الاتصال", Color.rgb(225, 239, 255), Color.rgb(0, 105, 200));
+        contacts.setTextSize(16);
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(132), dp(68)));
+        contacts.setOnClickListener(v -> chooseContact());
 
-        LinearLayout serviceCard = card(page);
-        TextView serviceTitle = text("تحويل الأموال", 20, INK, true);
-        serviceCard.addView(serviceTitle);
+        TextView validation = label("أدخل رقمًا مصريًا من 11 رقمًا", 16, MUTED, false);
+        validation.setPadding(0, dp(9), 0, dp(16));
+        form.addView(validation);
+        phoneInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String value = s.toString().trim();
+                boolean valid = value.matches("01[0125][0-9]{8}");
+                phoneInput.setBackground(inputBorder(valid ? GREEN : RED));
+                if (valid) {
+                    validation.setText("✓ رقم صحيح ومكتمل");
+                    validation.setTextColor(GREEN);
+                } else {
+                    validation.setText(value.length() >= 11 ? "رقم غير صحيح، راجع الرقم" : "الرقم غير مكتمل — يجب أن يكون 11 رقمًا");
+                    validation.setTextColor(RED);
+                }
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
 
-        TextView serviceHint = text("فودافون كاش • الخدمة الرسمية", 13, MUTED, false);
-        serviceHint.setPadding(0, dp(5), 0, dp(18));
-        serviceCard.addView(serviceHint);
+        TextView amountLabel = label("المبلغ بالجنيه المصري", 21, INK, true);
+        amountLabel.setPadding(0, dp(8), 0, dp(10));
+        form.addView(amountLabel);
+        amountInput = new EditText(this);
+        amountInput.setSingleLine(true);
+        amountInput.setTextSize(23);
+        amountInput.setTextColor(INK);
+        amountInput.setHintTextColor(Color.rgb(145, 153, 165));
+        amountInput.setHint("أدخل المبلغ");
+        amountInput.setInputType(8194);
+        amountInput.setPadding(dp(14), dp(16), dp(14), dp(16));
+        amountInput.setBackground(inputBorder(Color.rgb(190, 198, 208)));
+        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
 
-        addFieldLabel(serviceCard, "رقم هاتف المستلم");
-        phoneInput = editText("مثال: 01012345678", InputType.TYPE_CLASS_PHONE);
-        serviceCard.addView(phoneInput, matchWrap());
-
-        addFieldLabel(serviceCard, "المبلغ بالجنيه المصري");
-        amountInput = editText("مثال: 150", InputType.TYPE_CLASS_NUMBER
-                | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        LinearLayout.LayoutParams amountParams = matchWrap();
-        amountParams.topMargin = dp(2);
-        serviceCard.addView(amountInput, amountParams);
-
-        TextView note = text(
-                "بعد الضغط على تنفيذ ستفتح شاشة الاتصال الرسمية وكود التحويل مكتوبًا بالكامل. "
-                + "اضغط اتصال فقط، ثم أكمل خطوات فودافون بنفسك.",
-                12, MUTED, false);
+        TextView note = label("بعد التنفيذ ستفتح شاشة الاتصال بالكود جاهزًا. اضغط اتصال، ثم أكمل خطوات فودافون بنفسك.", 16, MUTED, false);
         note.setPadding(0, dp(14), 0, dp(16));
-        serviceCard.addView(note);
+        form.addView(note);
+        Button execute = button("تنفيذ التحويل", RED, Color.WHITE);
+        form.addView(execute, matchWrap());
+        execute.setOnClickListener(v -> prepareTransfer());
 
-        Button transfer = button("تنفيذ التحويل");
-        serviceCard.addView(transfer, matchWrap());
-        transfer.setOnClickListener(v -> prepareTransfer());
-
-        TextView safetyTitle = text("أمانك أولًا", 16, INK, true);
-        safetyTitle.setPadding(0, dp(20), 0, dp(8));
-        page.addView(safetyTitle);
-
-        TextView safety = text(
-                "لن نطلب الرقم السري ولن نحفظه. راجع اسم المستلم والمبلغ داخل قائمة فودافون "
-                + "قبل تأكيد أي تحويل. اختيار الشريحة يتم من شاشة الاتصال إذا كان هاتفك يدعم ذلك.",
-                13, MUTED, false);
-        page.addView(safety);
-
-        TextView footer = text("SMART WALLET  •  الإصدار 1.0", 11, MUTED, false);
-        footer.setGravity(Gravity.CENTER);
-        footer.setPadding(0, dp(28), 0, 0);
-        page.addView(footer);
-
-        setContentView(scroll);
+        TextView safe = label("لن نطلب الرقم السري أو نحفظه داخل التطبيق.", 16, GREEN, true);
+        safe.setPadding(0, dp(18), 0, dp(8));
+        page.addView(safe);
+        setContentView(wrapScroll(page));
     }
 
     private void prepareTransfer() {
         String phone = phoneInput.getText().toString().trim();
         String amount = amountInput.getText().toString().trim().replace(',', '.');
-
         if (!phone.matches("01[0125][0-9]{8}")) {
-            phoneInput.setError("أدخل رقمًا مصريًا صحيحًا مكوّنًا من 11 رقمًا");
+            phoneInput.setError("أدخل رقمًا مصريًا صحيحًا من 11 رقمًا");
             phoneInput.requestFocus();
             return;
         }
-
         if (!amount.matches("[0-9]+(\\.[0-9]{1,2})?")) {
-            amountInput.setError("أدخل مبلغًا صحيحًا، ويمكن استخدام منزلتين عشريتين");
+            amountInput.setError("أدخل مبلغًا صحيحًا");
             amountInput.requestFocus();
             return;
         }
-
         try {
             double value = Double.parseDouble(amount);
-            if (Double.isNaN(value) || Double.isInfinite(value) || value <= 0) {
-                throw new NumberFormatException();
-            }
+            if (Double.isNaN(value) || Double.isInfinite(value) || value <= 0) throw new NumberFormatException();
         } catch (NumberFormatException ex) {
-            amountInput.setError("أدخل مبلغًا أكبر من صفر");
+            amountInput.setError("يجب أن يكون المبلغ أكبر من صفر");
             amountInput.requestFocus();
             return;
         }
-
-        openVodafoneCode(phone, amount);
+        openUssd("*9*7*" + phone + "*" + amount + "#");
     }
 
-    private void openVodafoneCode(String phone, String amount) {
-        // ACTION_DIAL prefills the code only. The user must press Call and complete Vodafone's flow.
-        String ussdCode = "*9*7*" + phone + "*" + amount + "#";
-        Uri ussdUri = Uri.fromParts("tel", ussdCode, null);
-        Intent intent = new Intent(Intent.ACTION_DIAL, ussdUri);
+    private void chooseContact() {
+        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+        try {
+            startActivityForResult(intent, CONTACT_PICKER);
+        } catch (ActivityNotFoundException ex) {
+            Toast.makeText(this, "لا يوجد تطبيق جهات اتصال متاح.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CONTACT_PICKER && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Cursor cursor = null;
+            try {
+                cursor = getContentResolver().query(data.getData(),
+                        new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    String number = cursor.getString(0);
+                    if (number != null) {
+                        String digits = number.replaceAll("[^0-9]", "");
+                        if (digits.startsWith("0020")) digits = "0" + digits.substring(4);
+                        else if (digits.startsWith("20") && digits.length() == 12) digits = "0" + digits.substring(2);
+                        phoneInput.setText(digits);
+                    }
+                }
+            } catch (Exception ex) {
+                Toast.makeText(this, "تعذر قراءة رقم جهة الاتصال المختارة.", Toast.LENGTH_LONG).show();
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+        }
+    }
+
+    private void openUssd(String code) {
+        Uri uri = Uri.fromParts("tel", code, null);
+        Intent intent = new Intent(Intent.ACTION_DIAL, uri);
         try {
             startActivity(intent);
         } catch (ActivityNotFoundException ex) {
-            Toast.makeText(this,
-                    "لم يتم العثور على تطبيق اتصال على الهاتف.",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "لم يتم العثور على تطبيق اتصال على الهاتف.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void addService(LinearLayout parent, String title, String description, String symbol,
+                            int accent, View.OnClickListener action) {
+        LinearLayout box = card(parent);
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        box.addView(row, matchWrap());
+        TextView icon = label(symbol, 34, accent, true);
+        icon.setGravity(Gravity.CENTER);
+        icon.setBackground(round(Color.rgb(247, 239, 242), 18));
+        row.addView(icon, new LinearLayout.LayoutParams(dp(68), dp(68)));
+        LinearLayout details = new LinearLayout(this);
+        details.setOrientation(LinearLayout.VERTICAL);
+        details.setPadding(dp(14), 0, 0, 0);
+        row.addView(details, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        details.addView(label(title, 21, INK, true));
+        TextView desc = label(description, 15, MUTED, false);
+        desc.setPadding(0, dp(5), 0, 0);
+        details.addView(desc);
+        box.setOnClickListener(action);
+        box.setFocusable(true);
+        box.setClickable(true);
+    }
+
+    private LinearLayout basePage() {
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        page.setPadding(dp(18), dp(18), dp(18), dp(26));
+        page.setBackgroundColor(PAGE);
+        return page;
+    }
+
+    private ScrollView wrapScroll(View child) {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackgroundColor(PAGE);
+        scroll.addView(child);
+        return scroll;
     }
 
     private LinearLayout card(LinearLayout parent) {
@@ -173,58 +287,41 @@ public class MainActivity extends Activity {
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(18), dp(18), dp(18), dp(18));
         box.setBackground(round(Color.WHITE, 20));
-        box.setElevation(dp(2));
+        box.setElevation(dp(3));
         LinearLayout.LayoutParams params = matchWrap();
-        params.bottomMargin = dp(4);
+        params.bottomMargin = dp(14);
         parent.addView(box, params);
         return box;
     }
 
-    private void addFieldLabel(LinearLayout parent, String value) {
-        TextView label = text(value, 14, INK, true);
-        label.setPadding(0, dp(4), 0, dp(8));
-        parent.addView(label);
-    }
-
-    private EditText editText(String hint, int inputType) {
-        EditText edit = new EditText(this);
-        edit.setSingleLine(true);
-        edit.setTextSize(16);
-        edit.setTextColor(INK);
-        edit.setHintTextColor(Color.rgb(155, 160, 168));
-        edit.setHint(hint);
-        edit.setInputType(inputType);
-        edit.setPadding(dp(14), dp(12), dp(14), dp(12));
-        edit.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        edit.setTextDirection(View.TEXT_DIRECTION_LTR);
-        edit.setBackground(round(Color.rgb(247, 248, 250), 12));
-        LinearLayout.LayoutParams params = matchWrap();
-        params.bottomMargin = dp(14);
-        edit.setLayoutParams(params);
-        return edit;
-    }
-
-    private Button button(String label) {
+    private Button button(String title, int background, int foreground) {
         Button b = new Button(this);
-        b.setText(label);
-        b.setTextSize(15);
-        b.setTextColor(Color.WHITE);
+        b.setText(title);
+        b.setTextSize(18);
+        b.setTextColor(foreground);
         b.setAllCaps(false);
         b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        b.setPadding(dp(12), dp(12), dp(12), dp(12));
-        b.setBackground(round(RED, 14));
+        b.setMinHeight(dp(60));
+        b.setPadding(dp(12), dp(10), dp(12), dp(10));
+        b.setBackground(round(background, 16));
         return b;
     }
 
-    private TextView text(String value, int size, int color, boolean bold) {
+    private TextView label(String value, int size, int color, boolean bold) {
         TextView t = new TextView(this);
         t.setText(value);
         t.setTextSize(size);
         t.setTextColor(color);
-        t.setGravity(Gravity.RIGHT);
+        t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         t.setTypeface(Typeface.DEFAULT, bold ? Typeface.BOLD : Typeface.NORMAL);
         t.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         return t;
+    }
+
+    private GradientDrawable inputBorder(int stroke) {
+        GradientDrawable d = round(Color.WHITE, 15);
+        d.setStroke(dp(2), stroke);
+        return d;
     }
 
     private GradientDrawable round(int color, int radius) {
@@ -234,20 +331,21 @@ public class MainActivity extends Activity {
         return d;
     }
 
-    private GradientDrawable roundGradient(int start, int end, int radius) {
-        GradientDrawable d = new GradientDrawable(
-                GradientDrawable.Orientation.RIGHT_LEFT, new int[]{start, end});
+    private GradientDrawable gradient(int start, int end, int radius) {
+        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, new int[]{start, end});
         d.setCornerRadius(dp(radius));
         return d;
     }
 
     private LinearLayout.LayoutParams matchWrap() {
-        return new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+        return new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private int BLUE() {
+        return Color.rgb(0, 112, 210);
     }
 }
