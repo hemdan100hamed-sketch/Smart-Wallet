@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
     private static final int GREEN = Color.rgb(22, 163, 74);
     private static final int INK = Color.rgb(28, 37, 51);
     private static final int MUTED = Color.rgb(91, 103, 120);
-    private static final int PAGE = Color.rgb(247, 249, 252);
+    private static final int PAGE = Color.rgb(250, 244, 233);
     private static final int CONTACT_PICKER = 410;
 
     private EditText phoneInput;
@@ -58,9 +58,10 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "ستتوفر هذه الخدمة في تحديث قادم.", Toast.LENGTH_LONG).show());
 
         LinearLayout safety = compactCard(page);
-        TextView safeText = label("الأمان: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, MUTED, false);
+        safety.setBackground(round(Color.rgb(255, 249, 225), 16));
+        TextView safeText = label("الأمان: لا يطلب التطبيق الرقم السري ولا يحفظه. أكمل التأكيد داخل واجهة فودافون الرسمية.", 14, INK, false);
         safety.addView(safeText);
-        TextView version = label("SMART WALLET  •  3.0 TEST", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  3.2 TEST", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         version.setPadding(0, dp(2), 0, 0);
         page.addView(version);
@@ -81,19 +82,11 @@ public class MainActivity extends Activity {
         back.setOnClickListener(v -> showHome());
         page.addView(back, matchWrap());
 
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.VERTICAL);
-        header.setPadding(dp(20), dp(20), dp(20), dp(22));
-        header.setBackground(gradient(DARK_RED, RED, 24));
-        LinearLayout.LayoutParams hp = matchWrap();
-        hp.topMargin = dp(14);
-        page.addView(header, hp);
-        header.addView(label("تحويل أموال", 28, Color.WHITE, true));
-        TextView hint = label("إلى أي رقم محمول داخل الشبكة", 18, Color.WHITE, false);
-        hint.setPadding(0, dp(7), 0, 0);
-        header.addView(hint);
-
         LinearLayout form = card(page);
+        form.setPadding(dp(14), dp(12), dp(14), dp(12));
+        LinearLayout.LayoutParams formParams = (LinearLayout.LayoutParams) form.getLayoutParams();
+        formParams.topMargin = dp(10);
+        form.setLayoutParams(formParams);
         TextView phoneLabel = label("رقم هاتف المستلم", 21, INK, true);
         phoneLabel.setPadding(0, 0, 0, dp(10));
         form.addView(phoneLabel);
@@ -253,26 +246,29 @@ public class MainActivity extends Activity {
     private void addService(LinearLayout parent, String title, String description, String symbol,
                             int accent, View.OnClickListener action) {
         LinearLayout box = compactCard(parent);
+        int fill;
+        if (accent == RED) fill = Color.rgb(35, 112, 75);                 // أخضر زمردي للتحويل
+        else if (accent == BLUE()) fill = Color.rgb(143, 91, 54);         // بني دافئ للاستعلام
+        else fill = Color.rgb(77, 91, 135);                               // أزرق هادئ للخدمات الأخرى
+        box.setBackground(round(fill, 18));
+        box.setPadding(dp(13), dp(11), dp(13), dp(11));
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
         box.addView(row, matchWrap());
-        TextView icon = label(symbol, 34, accent, true);
+        TextView icon = label(symbol, 34, Color.WHITE, true);
         icon.setGravity(Gravity.CENTER);
-        int softAccent = Color.rgb(248, 238, 241);
-        if (accent == BLUE()) softAccent = Color.rgb(232, 243, 255);
-        else if (accent == Color.rgb(110, 75, 190)) softAccent = Color.rgb(242, 237, 252);
-        icon.setBackground(round(softAccent, 16));
+        icon.setBackground(round(Color.argb(48, 255, 255, 255), 16));
         row.addView(icon, new LinearLayout.LayoutParams(dp(58), dp(58)));
         LinearLayout details = new LinearLayout(this);
         details.setOrientation(LinearLayout.VERTICAL);
         details.setPadding(dp(14), 0, 0, 0);
         row.addView(details, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        details.addView(label(title, 21, INK, true));
-        TextView desc = label(description, 15, MUTED, false);
+        details.addView(label(title, 21, Color.WHITE, true));
+        TextView desc = label(description, 15, Color.rgb(246, 246, 246), false);
         desc.setPadding(0, dp(5), 0, 0);
         details.addView(desc);
-        GradientDrawable serviceBorder = round(Color.WHITE, 18);
-        serviceBorder.setStroke(dp(2), accent);
+        GradientDrawable serviceBorder = round(fill, 18);
+        serviceBorder.setStroke(dp(1), Color.argb(90, 255, 255, 255));
         box.setBackground(serviceBorder);
         box.setOnClickListener(action);
         box.setFocusable(true);
