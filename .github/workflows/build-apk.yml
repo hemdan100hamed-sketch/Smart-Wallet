@@ -15,6 +15,15 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v5
 
+      - name: Verify the app requests no internet permission
+        shell: bash
+        run: |
+          if grep -R -n --include='*.xml' 'android.permission.INTERNET' app/src/main; then
+            echo "Unexpected INTERNET permission found."
+            exit 1
+          fi
+          echo "No INTERNET permission found in app manifest/resources."
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
