@@ -58,6 +58,9 @@ public class MainActivity extends Activity {
     private EditText amountInput;
     private EditText pinInput;
     private Button etisalatRecordButton;
+    private Button vodafoneRecordButton;
+    private String lastVodafonePhone;
+    private String lastVodafoneAmount;
     private String lastEtisalatPhone;
     private String lastEtisalatAmount;
     private final Handler pinMaskHandler = new Handler(Looper.getMainLooper());
@@ -474,6 +477,111 @@ public class MainActivity extends Activity {
         setContentView(frame);
     }
 
+    private void showVodafoneLocalRecord() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackgroundColor(PAGE);
+
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setGravity(Gravity.CENTER_HORIZONTAL);
+        page.setPadding(dp(18), dp(24), dp(18), dp(18));
+        scroll.addView(page);
+
+        LinearLayout receipt = new LinearLayout(this);
+        receipt.setOrientation(LinearLayout.VERTICAL);
+        receipt.setGravity(Gravity.CENTER_HORIZONTAL);
+        receipt.setPadding(dp(22), dp(24), dp(22), dp(22));
+        receipt.setBackground(round(Color.WHITE, 18));
+        receipt.setElevation(dp(2));
+        page.addView(receipt, matchWrap());
+
+        TextView brand = label("Smart Wallet", 17, NAVY, true);
+        brand.setGravity(Gravity.CENTER);
+        receipt.addView(brand, matchWrap());
+
+        // علامة الصح داخل دائرة خضراء واضحة.
+        TextView check = new TextView(this);
+        check.setText("✓");
+        check.setTextSize(38);
+        check.setTextColor(Color.WHITE);
+        check.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        check.setGravity(Gravity.CENTER);
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        circle.setColor(GREEN);
+        check.setBackground(circle);
+        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(dp(76), dp(76));
+        checkParams.topMargin = dp(14);
+        receipt.addView(check, checkParams);
+
+        TextView done = label("تم التحويل بنجاح", 27, GREEN, true);
+        done.setGravity(Gravity.CENTER);
+        done.setPadding(0, dp(16), 0, dp(18));
+        receipt.addView(done, matchWrap());
+
+        TextView amountCaption = label("المبلغ المحوّل", 16, MUTED, true);
+        amountCaption.setGravity(Gravity.CENTER);
+        receipt.addView(amountCaption, matchWrap());
+
+        TextView amountLine = label(formatEtisalatAmount(lastVodafoneAmount) + " جنيه", 27, INK, true);
+        amountLine.setGravity(Gravity.CENTER);
+        amountLine.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        amountLine.setPadding(0, dp(4), 0, dp(18));
+        receipt.addView(amountLine, matchWrap());
+
+        View separator = new View(this);
+        separator.setBackgroundColor(Color.rgb(230, 235, 241));
+        receipt.addView(separator, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
+
+        LinearLayout details = new LinearLayout(this);
+        details.setOrientation(LinearLayout.VERTICAL);
+        details.setPadding(0, dp(12), 0, dp(10));
+        receipt.addView(details, matchWrap());
+
+        addReceiptDetailRow(details, "المحفظة", "Vodafone Cash", false);
+        addReceiptDetailRow(details, "رقم المستلم", lastVodafonePhone, true);
+        String receiptDate = new java.text.SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new java.util.Date());
+        String receiptTime = new java.text.SimpleDateFormat("hh:mm a", Locale.US).format(new java.util.Date());
+        String localRecordId = String.format(Locale.US, "SW-%013d", System.currentTimeMillis());
+        addReceiptDetailRow(details, "التاريخ", receiptDate, true);
+        addReceiptDetailRow(details, "الوقت", receiptTime, true);
+        addReceiptDetailRow(details, "رقم السجل", localRecordId, true);
+
+        Button share = button("مشاركة الإيصال", GREEN, Color.WHITE);
+        LinearLayout.LayoutParams shareParams = matchWrap();
+        shareParams.topMargin = dp(18);
+        page.addView(share, shareParams);
+        share.setOnClickListener(v -> shareEtisalatReceiptImage(receipt));
+
+        // العبارة المحلية المختصرة تظهر بخط صغير في نهاية الصفحة.
+        TextView disclosure = label("سجل محلي محفوظ بواسطة Smart Wallet", 10, MUTED, false);
+        disclosure.setGravity(Gravity.CENTER);
+        disclosure.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        disclosure.setPadding(dp(4), dp(12), dp(4), dp(8));
+        page.addView(disclosure, matchWrap());
+
+        // إطار أحمر سميك يحيط بواجهة الإيصال.
+        LinearLayout frame = new LinearLayout(this);
+        frame.setOrientation(LinearLayout.VERTICAL);
+        frame.setPadding(dp(8), dp(8), dp(8), dp(8));
+        frame.setBackground(round(RED, 22));
+        frame.addView(scroll, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(frame);
+    }
+
+    private void askForVodafoneManualConfirmation() {
+        if (lastVodafonePhone == null || lastVodafoneAmount == null) return;
+        new AlertDialog.Builder(this)
+                .setTitle("تأكيد نجاح التحويل")
+                .setMessage("هل شاهدت رسالة نجاح التحويل داخل تطبيق فودافون كاش الرسمي؟ سيُنشأ سجل محلي بناءً على تأكيدك.")
+                .setNegativeButton("رجوع", null)
+                .setPositiveButton("نعم، عرض السجل", (dialog, which) -> showVodafoneLocalRecord())
+                .show();
+    }
+
     private void addReceiptDetailRow(LinearLayout parent, String title, String value, boolean ltrValue) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -541,6 +649,9 @@ public class MainActivity extends Activity {
     }
 
     private void showTransfer() {
+        lastVodafonePhone = null;
+        lastVodafoneAmount = null;
+        vodafoneRecordButton = null;
         LinearLayout page = basePage();
         Button back = button("رجوع إلى خدمات فودافون", Color.rgb(235, 238, 243), INK);
         back.setOnClickListener(v -> showVodafoneHome());
@@ -641,6 +752,13 @@ public class MainActivity extends Activity {
         Button execute = button("تنفيذ التحويل", RED, Color.WHITE);
         form.addView(execute, matchWrap());
         execute.setOnClickListener(v -> prepareTransfer());
+
+        vodafoneRecordButton = button("تأكيد نجاح التحويل وعرض السجل", TEAL, Color.WHITE);
+        LinearLayout.LayoutParams vodafoneRecordParams = matchWrap();
+        vodafoneRecordParams.topMargin = dp(10);
+        form.addView(vodafoneRecordButton, vodafoneRecordParams);
+        vodafoneRecordButton.setVisibility(View.GONE);
+        vodafoneRecordButton.setOnClickListener(v -> askForVodafoneManualConfirmation());
 
         TextView safe = label("لن نطلب الرقم السري أو نحفظه داخل التطبيق.", 16, GREEN, true);
         safe.setPadding(0, dp(18), 0, dp(8));
@@ -813,6 +931,9 @@ public class MainActivity extends Activity {
             amountInput.requestFocus();
             return;
         }
+        lastVodafonePhone = phone;
+        lastVodafoneAmount = amount;
+        if (vodafoneRecordButton != null) vodafoneRecordButton.setVisibility(View.VISIBLE);
         openUssd("*9*7*" + phone + "*" + amount + "#");
     }
 
