@@ -29,17 +29,17 @@
 - Build status: not yet built in this environment; Android device testing not yet completed.
 - Remaining validation: compile on CI/Android Studio; test dialer prefill, manual confirmation, dynamic fields, generated PNG, and sharing to WhatsApp/Telegram; compare screen against the reference image on-device.
 
-
-## Version 3.10 — Restore full wallet app and e& Cash manual record (in progress)
+## Version 3.10 — Restore full wallet app and e& Cash manual record (stable reference)
 - Working branch: `feature/manual-transfer-receipt-v3.10`
 - Android versionName: `3.10`
 - Android versionCode: `40`
-- Starting source for the full application flows: `smart-wallet-v3.6`, preserving both Vodafone Cash and e& Cash services, balance inquiry, contacts, favorites, and PIN masking/clearing behavior.
-- New feature is scoped to e& Cash only: after entering transfer details and preparing the e& Cash USSD transfer, the user can manually confirm success and view/share a local record populated with the entered amount and recipient.
-- Vodafone Cash transfer flow remains unchanged from the restored 3.6 source; no receipt button or receipt workflow is added to Vodafone Cash.
-- Receipt is a locally generated Smart Wallet record based on user confirmation, not a provider-issued receipt or automatic network verification. The Share action exports the receipt card only, without the in-app Share button.
-- Original launcher icon resources and manifest icon declarations are restored.
-- FileProvider remains configured for PNG sharing.
-- Source review: unused receipt-screen state removed; stale recipient/amount data is cleared when reopening the e& Cash transfer screen; Etisalat-only receipt button and record methods are isolated from Vodafone transfer methods.
-- Build status: source changes committed; CI build and APK artifact not yet verified.
-- Device testing: not yet performed. Required tests: both wallet selection/services, Vodafone balance and transfer, e& balance and transfer/PIN flow, manual confirmation, receipt fields, PNG export/share, and launcher icon on device.
+- Commit used as the preserved baseline for 4.1: `0b3b56f2bf268dcaeba8b9c6333100915a8e6bc6`
+- Preserve this branch and the installed app/data; do not overwrite or uninstall it as part of 4.1 development.
+
+## Version 4.1 — Fresh development line from stable 3.10
+- Working branch: `feature/smart-wallet-v4.1-from-stable-v3.10`
+- Starting commit: `0b3b56f2bf268dcaeba8b9c6333100915a8e6bc6`
+- Android versionName: `4.1`
+- Android versionCode: `42`
+- Initial source is a clean copy of the preserved 3.10 baseline. No unverified 3.11 receipt-redesign changes are included in this starting point.
+- Build and Android 14 installation testing are pending. Do not call this release successful until the APK is installed and tested on the user's phone.
