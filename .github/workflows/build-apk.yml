@@ -2,7 +2,7 @@ name: Build Smart Wallet APK
 
 on:
   push:
-    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9", "feature/manual-transfer-receipt-v3.10", "feature/receipt-redesign-v3.11" ]
+    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9", "feature/manual-transfer-receipt-v3.10", "feature/receipt-redesign-v3.11", "feature/receipt-redesign-v3.11-side-by-side" ]
   workflow_dispatch:
 
 permissions:
@@ -61,7 +61,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Smart-Wallet-debug
+          name: Smart-Wallet-3.11-side-by-side
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
