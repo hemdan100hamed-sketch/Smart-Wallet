@@ -155,6 +155,9 @@ public class MainActivity extends Activity {
     }
 
     private void showEtisalatTransfer() {
+        lastEtisalatPhone = null;
+        lastEtisalatAmount = null;
+        etisalatRecordButton = null;
         LinearLayout page = basePage();
         Button back = button("رجوع إلى خدمات e& كاش", Color.rgb(235, 238, 243), INK);
         back.setOnClickListener(v -> showEtisalatHome());
