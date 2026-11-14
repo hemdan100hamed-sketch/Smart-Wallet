@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.method.PasswordTransformationMethod;
+import android.text.method.TransformationMethod;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -147,65 +148,108 @@ public class MainActivity extends Activity {
         page.addView(back, matchWrap());
 
         LinearLayout form = card(page);
-        TextView heading = label("تحويل الأموال", 26, NAVY, true);
-        heading.setPadding(0, 0, 0, dp(14));
+        form.setPadding(dp(8), dp(12), dp(8), dp(12));
+        TextView heading = label("تحويل الأموال", 25, NAVY, true);
+        heading.setPadding(0, 0, 0, dp(12));
         form.addView(heading);
-        TextView phoneLabel = label("1- رقم المحول إليه", 19, INK, true);
+
+        TextView phoneLabel = label("1- رقم المحول إليه", 20, INK, true);
+        phoneLabel.setPadding(0, 0, 0, dp(6));
         form.addView(phoneLabel);
+
         LinearLayout phoneRow = new LinearLayout(this);
         phoneRow.setOrientation(LinearLayout.HORIZONTAL);
         phoneRow.setGravity(Gravity.CENTER_VERTICAL);
         phoneRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        form.addView(phoneRow, matchWrap());
-        phoneInput = new EditText(this);
-        phoneInput.setSingleLine(true);
-        phoneInput.setTextSize(20);
-        phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        phoneInput.setInputType(3);
-        phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
-        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
-        phoneInput.setHint("01xxxxxxxxx");
-        phoneInput.setPadding(dp(8), dp(8), dp(8), dp(8));
-        phoneInput.setBackgroundColor(Color.TRANSPARENT);
+        phoneRow.setPadding(dp(4), dp(4), dp(4), dp(4));
+        phoneRow.setBackground(inputBorder(FIELD_BORDER));
+        form.addView(phoneRow, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+
         Button favorites = button("♡", Color.TRANSPARENT, RED);
         styleInlineIcon(favorites, "الأرقام المفضلة");
-        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        favorites.setTextSize(25);
+        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(34), dp(52)));
         favorites.setOnClickListener(v -> showFavorites());
-        Button contacts = button("👤", Color.TRANSPARENT, RED);
+
+        Button contacts = button("♙", Color.TRANSPARENT, RED);
         styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        contacts.setTextSize(24);
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(34), dp(52)));
         contacts.setOnClickListener(v -> chooseContact());
-        phoneRow.addView(phoneInput, new LinearLayout.LayoutParams(0, dp(68), 1f));
-        phoneRow.setPadding(dp(5), dp(5), dp(5), dp(5));
-        phoneRow.setBackground(inputBorder(FIELD_BORDER));
+
+        phoneInput = new EditText(this);
+        phoneInput.setSingleLine(true);
+        phoneInput.setMaxLines(1);
+        phoneInput.setHorizontallyScrolling(true);
+        phoneInput.setMinWidth(0);
+        phoneInput.setMinimumWidth(0);
+        phoneInput.setTextSize(19);
+        phoneInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        phoneInput.setTextColor(INK);
+        phoneInput.setHintTextColor(Color.rgb(145, 153, 165));
+        phoneInput.setHint("01xxxxxxxxx");
+        phoneInput.setInputType(3);
+        phoneInput.setTextDirection(View.TEXT_DIRECTION_LTR);
+        phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        phoneInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+        phoneInput.setPadding(dp(4), dp(8), dp(4), dp(8));
+        phoneInput.setBackgroundColor(Color.TRANSPARENT);
+        phoneRow.addView(phoneInput, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+
+        TextView phoneValidation = label("أدخل رقمًا مصريًا من 11 رقمًا", 15, MUTED, false);
+        phoneValidation.setPadding(dp(2), dp(7), 0, dp(2));
+        form.addView(phoneValidation);
+        phoneInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String value = s.toString().trim();
+                boolean valid = value.matches("01[0125][0-9]{8}");
+                phoneRow.setBackground(inputBorder(valid ? GREEN : FIELD_BORDER));
+                if (value.isEmpty()) {
+                    phoneValidation.setText("أدخل رقمًا مصريًا من 11 رقمًا");
+                    phoneValidation.setTextColor(MUTED);
+                } else if (valid) {
+                    phoneValidation.setText("✓ رقم صحيح ومكتمل");
+                    phoneValidation.setTextColor(GREEN);
+                } else {
+                    phoneValidation.setText(value.length() >= 11
+                            ? "رقم غير صحيح، راجع الرقم"
+                            : "الرقم غير مكتمل — يجب أن يكون 11 رقمًا");
+                    phoneValidation.setTextColor(RED);
+                }
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
 
         TextView amountLabel = label("2- مبلغ التحويل بالجنيه", 19, INK, true);
-        amountLabel.setPadding(0, dp(16), 0, dp(6));
+        amountLabel.setPadding(0, dp(13), 0, dp(5));
         form.addView(amountLabel);
         amountInput = new EditText(this);
         amountInput.setSingleLine(true);
-        amountInput.setTextSize(22);
+        amountInput.setTextSize(21);
         amountInput.setInputType(8194);
         amountInput.setTextDirection(View.TEXT_DIRECTION_LTR);
-        amountInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        amountInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        amountInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
         amountInput.setHint("أدخل المبلغ");
-        amountInput.setPadding(dp(12), dp(12), dp(12), dp(12));
+        amountInput.setPadding(dp(12), dp(10), dp(12), dp(10));
         amountInput.setBackground(inputBorder(FIELD_BORDER));
-        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+        form.addView(amountInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(66)));
 
         TextView pinLabel = label("3- الرقم السري للمحفظة", 19, INK, true);
-        pinLabel.setPadding(0, dp(16), 0, dp(6));
+        pinLabel.setPadding(0, dp(13), 0, dp(5));
         form.addView(pinLabel);
         pinInput = new EditText(this);
         pinInput.setSingleLine(true);
         pinInput.setTextSize(22);
         pinInput.setInputType(2);
         pinInput.setTextDirection(View.TEXT_DIRECTION_LTR);
-        pinInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        pinInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        pinInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
         pinInput.setHint("أدخل الرقم السري");
-        pinInput.setPadding(dp(12), dp(12), dp(12), dp(12));
+        pinInput.setPadding(dp(12), dp(10), dp(12), dp(10));
         pinInput.setBackground(inputBorder(FIELD_BORDER));
-        form.addView(pinInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+        form.addView(pinInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(66)));
         pinInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -214,7 +258,7 @@ public class MainActivity extends Activity {
                 int cursor = pinInput.getSelectionStart();
                 hidePinRunnable = () -> {
                     if (pinInput != null) {
-                        pinInput.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        pinInput.setTransformationMethod(new AsteriskPasswordTransformationMethod());
                         pinInput.setSelection(Math.max(0, Math.min(cursor, pinInput.length())));
                     }
                 };
@@ -223,16 +267,38 @@ public class MainActivity extends Activity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        TextView warning = label("ملحوظة مهمة: بعد الضغط على تنفيذ التحويل، اضغط رقم 1 ثم اضغط إرسال لإتمام عملية التحويل.", 16, RED, true);
-        warning.setPadding(0, dp(14), 0, dp(14));
+        TextView warning = label("ملحوظة مهمة: بعد الضغط على تنفيذ التحويل، اضغط رقم 1 ثم اضغط إرسال لإتمام عملية التحويل.", 15, RED, true);
+        warning.setPadding(0, dp(12), 0, dp(12));
         form.addView(warning);
         Button execute = button("تنفيذ التحويل", RED, Color.WHITE);
         form.addView(execute, matchWrap());
         execute.setOnClickListener(v -> prepareEtisalatTransfer());
-        TextView privacy = label("الرقم السري لا يُحفظ في المفضلة أو في ملفات التطبيق.", 15, GREEN, true);
-        privacy.setPadding(0, dp(14), 0, 0);
+        TextView privacy = label("الرقم السري لا يُحفظ في المفضلة أو في ملفات التطبيق.", 14, GREEN, true);
+        privacy.setPadding(0, dp(12), 0, 0);
         form.addView(privacy);
         setContentView(wrapScroll(redFrame(page)));
+    }
+
+    private static class AsteriskPasswordTransformationMethod implements TransformationMethod {
+        @Override
+        public CharSequence getTransformation(CharSequence source, View view) {
+            return new CharSequence() {
+                @Override public int length() { return source.length(); }
+                @Override public char charAt(int index) { return '*'; }
+                @Override public CharSequence subSequence(int start, int end) {
+                    StringBuilder masked = new StringBuilder();
+                    for (int i = start; i < end; i++) masked.append('*');
+                    return masked.toString();
+                }
+                @Override public String toString() {
+                    StringBuilder masked = new StringBuilder();
+                    for (int i = 0; i < source.length(); i++) masked.append('*');
+                    return masked.toString();
+                }
+            };
+        }
+        @Override public void onFocusChanged(View view, CharSequence sourceText,
+                boolean focused, int direction, android.graphics.Rect previouslyFocusedRect) {}
     }
 
     private void prepareEtisalatTransfer() {
@@ -262,7 +328,10 @@ public class MainActivity extends Activity {
             return;
         }
         String ussd = "*777*1*" + pin + "*" + amount + "*" + phone + "*" + phone + "#";
+        if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
         pinInput.setText("");
+        if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
+        hidePinRunnable = null;
         pin = null;
         openUssd(ussd);
         ussd = null;
