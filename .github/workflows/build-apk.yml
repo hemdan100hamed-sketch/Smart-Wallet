@@ -2,7 +2,7 @@ name: Build Smart Wallet APK
 
 on:
   push:
-    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9" ]
+    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9", "feature/manual-transfer-receipt-v3.10" ]
   workflow_dispatch:
 
 permissions:
