@@ -40,6 +40,6 @@
 - Receipt is a locally generated Smart Wallet record based on user confirmation, not a provider-issued receipt or automatic network verification. The Share action exports the receipt card only, without the in-app Share button.
 - Original launcher icon resources and manifest icon declarations are restored.
 - FileProvider remains configured for PNG sharing.
-- Source review: unused receipt-screen state removed; Etisalat-only receipt button and record methods are isolated from the Vodafone transfer methods.
+- Source review: unused receipt-screen state removed; stale recipient/amount data is cleared when reopening the e& Cash transfer screen; Etisalat-only receipt button and record methods are isolated from Vodafone transfer methods.
 - Build status: source changes committed; CI build and APK artifact not yet verified.
 - Device testing: not yet performed. Required tests: both wallet selection/services, Vodafone balance and transfer, e& balance and transfer/PIN flow, manual confirmation, receipt fields, PNG export/share, and launcher icon on device.
