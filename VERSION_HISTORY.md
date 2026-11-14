@@ -23,5 +23,8 @@
   - Sharing exports the same receipt image with the Share control/word removed.
   - Amount and recipient number are populated from the transfer details entered by the user.
   - Clearly treat this as a user-generated shareable record, not an official network-issued receipt or independent verification.
-- Status: version numbering updated; receipt implementation, visual matching, build, and device testing are not yet completed.
-- Required reference: original receipt screenshot as a directly attached image, since the external image-host link could not be retrieved in this session.
+- Implemented in source (first pass): manual confirmation dialog after transfer preparation; local record screen with dynamic amount/recipient; Share action renders the record view to PNG and opens Android Sharesheet through FileProvider; exported image excludes the in-app Share button.
+- Safety distinction: record screen labels it as a locally generated Smart Wallet record based on user confirmation, not a wallet-provider-issued receipt.
+- Visual status: structural first pass only; exact pixel-level matching is not claimed. The linked reference image was viewable, but its pixels were not available as a directly attached source asset for precise measurement.
+- Build status: not yet built in this environment; Android device testing not yet completed.
+- Remaining validation: compile on CI/Android Studio; test dialer prefill, manual confirmation, dynamic fields, generated PNG, and sharing to WhatsApp/Telegram; compare screen against the reference image on-device.
