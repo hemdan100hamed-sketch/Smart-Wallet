@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
     private EditText pinInput;
     private final Handler pinMaskHandler = new Handler(Looper.getMainLooper());
     private Runnable hidePinRunnable;
+    private AsteriskPasswordTransformationMethod pinMaskMethod;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,6 +248,8 @@ public class MainActivity extends Activity {
         pinInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         pinInput.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
         pinInput.setHint("أدخل الرقم السري");
+        pinMaskMethod = new AsteriskPasswordTransformationMethod();
+        pinInput.setTransformationMethod(pinMaskMethod);
         pinInput.setPadding(dp(12), dp(10), dp(12), dp(10));
         pinInput.setBackground(inputBorder(FIELD_BORDER));
         form.addView(pinInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(66)));
@@ -254,11 +257,13 @@ public class MainActivity extends Activity {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
-                pinInput.setTransformationMethod(null);
+                pinMaskMethod.setRevealLastDigit(true);
+                pinInput.setTransformationMethod(pinMaskMethod);
                 int cursor = pinInput.getSelectionStart();
                 hidePinRunnable = () -> {
-                    if (pinInput != null) {
-                        pinInput.setTransformationMethod(new AsteriskPasswordTransformationMethod());
+                    if (pinInput != null && pinMaskMethod != null) {
+                        pinMaskMethod.setRevealLastDigit(false);
+                        pinInput.setTransformationMethod(pinMaskMethod);
                         pinInput.setSelection(Math.max(0, Math.min(cursor, pinInput.length())));
                     }
                 };
@@ -280,25 +285,25 @@ public class MainActivity extends Activity {
     }
 
     private static class AsteriskPasswordTransformationMethod implements TransformationMethod {
-        @Override
-        public CharSequence getTransformation(CharSequence source, View view) {
+        private boolean revealLastDigit;
+        void setRevealLastDigit(boolean reveal) { revealLastDigit = reveal; }
+        @Override public CharSequence getTransformation(CharSequence source, View view) {
             return new CharSequence() {
                 @Override public int length() { return source.length(); }
-                @Override public char charAt(int index) { return '*'; }
+                @Override public char charAt(int index) { return revealLastDigit && index == source.length() - 1 ? source.charAt(index) : '*'; }
                 @Override public CharSequence subSequence(int start, int end) {
-                    StringBuilder masked = new StringBuilder();
-                    for (int i = start; i < end; i++) masked.append('*');
-                    return masked.toString();
+                    StringBuilder out = new StringBuilder();
+                    for (int i = start; i < end; i++) out.append(charAt(i));
+                    return out.toString();
                 }
                 @Override public String toString() {
-                    StringBuilder masked = new StringBuilder();
-                    for (int i = 0; i < source.length(); i++) masked.append('*');
-                    return masked.toString();
+                    StringBuilder out = new StringBuilder();
+                    for (int i = 0; i < source.length(); i++) out.append(charAt(i));
+                    return out.toString();
                 }
             };
         }
-        @Override public void onFocusChanged(View view, CharSequence sourceText,
-                boolean focused, int direction, android.graphics.Rect previouslyFocusedRect) {}
+        @Override public void onFocusChanged(View view, CharSequence sourceText, boolean focused, int direction, android.graphics.Rect previouslyFocusedRect) {}
     }
 
     private void prepareEtisalatTransfer() {
@@ -329,6 +334,7 @@ public class MainActivity extends Activity {
         }
         String ussd = "*777*1*" + pin + "*" + amount + "*" + phone + "*" + phone + "#";
         if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
+        if (pinMaskMethod != null) pinMaskMethod.setRevealLastDigit(false);
         pinInput.setText("");
         if (hidePinRunnable != null) pinMaskHandler.removeCallbacks(hidePinRunnable);
         hidePinRunnable = null;
