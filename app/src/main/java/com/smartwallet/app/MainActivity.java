@@ -238,13 +238,6 @@ public class MainActivity extends Activity {
         page.addView(share, shareParams);
         share.setOnClickListener(v -> shareReceiptImage(receipt));
 
-        Button back = button("العودة");
-        LinearLayout.LayoutParams backParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        backParams.topMargin = dp(10);
-        page.addView(back, backParams);
-        back.setOnClickListener(v -> buildScreen());
-
         setContentView(scroll);
     }
 
