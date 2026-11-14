@@ -43,3 +43,12 @@
 - Source review: unused receipt-screen state removed; stale recipient/amount data is cleared when reopening the e& Cash transfer screen; Etisalat-only receipt button and record methods are isolated from Vodafone transfer methods.
 - Build status: source changes committed; CI build and APK artifact not yet verified.
 - Device testing: not yet performed. Required tests: both wallet selection/services, Vodafone balance and transfer, e& balance and transfer/PIN flow, manual confirmation, receipt fields, PNG export/share, and launcher icon on device.
+
+
+## Version 3.11 — Receipt redesign and launcher icon (development)
+- Working branch: `feature/receipt-redesign-v3.11`, created from `feature/manual-transfer-receipt-v3.10` without changing the prior branch.
+- Android versionName: `3.11`; versionCode: `41`.
+- Receipt redesign for e& Cash manual confirmation only: green circular checkmark; heading `تم التحويل بنجاح`; amount, wallet, recipient, date, time, and local record number; exact short note `سجل محلي محفوظ بواسطة Smart Wallet`; green Share button.
+- Receipt remains generated only after the user manually confirms they saw success in the official e& Cash flow. It does not verify the network transfer.
+- Launcher icon source: repository-root `02.ico`. GitHub Actions converts it to Android density PNG resources and an adaptive-icon foreground during the build; the source ICO is preserved unchanged.
+- Build and Android device testing: pending. Verify icon appearance on launcher and receipt/share image on device before treating 3.11 as stable.
