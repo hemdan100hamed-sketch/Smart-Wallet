@@ -4,7 +4,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:label="Smart Wallet"
+        android:label="Smart Wallet 3.11"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <provider
