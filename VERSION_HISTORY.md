@@ -28,3 +28,17 @@
 - Visual status: structural first pass only; exact pixel-level matching is not claimed. The linked reference image was viewable, but its pixels were not available as a directly attached source asset for precise measurement.
 - Build status: not yet built in this environment; Android device testing not yet completed.
 - Remaining validation: compile on CI/Android Studio; test dialer prefill, manual confirmation, dynamic fields, generated PNG, and sharing to WhatsApp/Telegram; compare screen against the reference image on-device.
+
+
+## Version 3.10 — Restore full wallet app and e& Cash manual record (in progress)
+- Working branch: `feature/manual-transfer-receipt-v3.10`
+- Android versionName: `3.10`
+- Android versionCode: `40`
+- Starting source for the full application flows: `smart-wallet-v3.6`, preserving both Vodafone Cash and e& Cash services, balance inquiry, contacts, favorites, and PIN masking/clearing behavior.
+- New feature is scoped to e& Cash only: after entering transfer details and preparing the e& Cash USSD transfer, the user can manually confirm success and view/share a local record populated with the entered amount and recipient.
+- Vodafone Cash transfer flow remains unchanged from the restored 3.6 source; no receipt button or receipt workflow is added to Vodafone Cash.
+- Receipt is a locally generated Smart Wallet record based on user confirmation, not a provider-issued receipt or automatic network verification. The Share action exports the receipt card only, without the in-app Share button.
+- Original launcher icon resources and manifest icon declarations are restored.
+- FileProvider remains configured for PNG sharing.
+- Build status: source changes committed; CI build and APK artifact not yet verified.
+- Device testing: not yet performed. Required tests: both wallet selection/services, Vodafone balance and transfer, e& balance and transfer/PIN flow, manual confirmation, receipt fields, PNG export/share, and launcher icon on device.
