@@ -155,7 +155,6 @@ public class MainActivity extends Activity {
     }
 
     private void showEtisalatTransfer() {
-        showingEtisalatRecord = false;
         LinearLayout page = basePage();
         Button back = button("رجوع إلى خدمات e& كاش", Color.rgb(235, 238, 243), INK);
         back.setOnClickListener(v -> showEtisalatHome());
@@ -378,7 +377,6 @@ public class MainActivity extends Activity {
     }
 
     private void showEtisalatLocalRecord() {
-        showingEtisalatRecord = true;
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
