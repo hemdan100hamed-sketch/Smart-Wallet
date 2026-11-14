@@ -474,6 +474,29 @@ public class MainActivity extends Activity {
         setContentView(frame);
     }
 
+    private void addReceiptDetailRow(LinearLayout parent, String title, String value, boolean ltrValue) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setPadding(0, dp(8), 0, dp(8));
+
+        TextView key = label(title, 15, MUTED, false);
+        key.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        row.addView(key, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView val = label(value, 16, INK, true);
+        val.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        if (ltrValue) val.setTextDirection(View.TEXT_DIRECTION_LTR);
+        row.addView(val, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        parent.addView(row, matchWrap());
+
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.rgb(239, 242, 246));
+        parent.addView(divider, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
+    }
+
     private String formatEtisalatAmount(String raw) {
         try {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
