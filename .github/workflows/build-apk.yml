@@ -2,7 +2,7 @@ name: Build Smart Wallet APK
 
 on:
   push:
-    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9", "feature/manual-transfer-receipt-v3.10" ]
+    branches: [ "main", "transfer-prefill-ui", "feature/manual-transfer-receipt-v3.9", "feature/manual-transfer-receipt-v3.10", "feature/receipt-redesign-v3.11" ]
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,20 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      - name: Generate launcher icons from 02.ico
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+          mkdir -p app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xxxhdpi
+          for spec in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
+            set -- $spec
+            density="$1"
+            size="$2"
+            convert '02.ico[0]' -background none -resize ${size}x${size} -gravity center -extent ${size}x${size} PNG32:app/src/main/res/mipmap-${density}/ic_launcher.png
+          done
+          convert '02.ico[0]' -background none -resize 72x72 -gravity center -extent 108x108 PNG32:app/src/main/res/mipmap-anydpi-v26/ic_launcher_foreground.png
 
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
