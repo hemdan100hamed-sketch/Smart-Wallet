@@ -398,56 +398,97 @@ public class MainActivity extends Activity {
         receipt.setElevation(dp(2));
         page.addView(receipt, matchWrap());
 
-        // رسم رمز محفظة بسيط أعلى الإيصال، وفق ترتيب الصورة المرجعية.
-        TextView walletIcon = new TextView(this);
-        walletIcon.setText("▰");
-        walletIcon.setTextSize(48);
-        walletIcon.setTextColor(DARK_RED);
-        walletIcon.setGravity(Gravity.CENTER);
-        receipt.addView(walletIcon, new LinearLayout.LayoutParams(dp(78), dp(58)));
+        TextView brand = label("Smart Wallet", 17, NAVY, true);
+        brand.setGravity(Gravity.CENTER);
+        receipt.addView(brand, matchWrap());
 
         TextView check = new TextView(this);
         check.setText("✓");
-        check.setTextSize(34);
+        check.setTextSize(36);
         check.setTextColor(Color.WHITE);
         check.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         check.setGravity(Gravity.CENTER);
         GradientDrawable circle = new GradientDrawable();
         circle.setShape(GradientDrawable.OVAL);
-        circle.setColor(RED);
+        circle.setColor(GREEN);
         check.setBackground(circle);
-        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(dp(62), dp(62));
-        checkParams.topMargin = dp(2);
+        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(dp(70), dp(70));
+        checkParams.topMargin = dp(14);
         receipt.addView(check, checkParams);
 
-        TextView done = label("تم", 30, INK, true);
+        TextView done = label("تم التحويل بنجاح", 27, GREEN, true);
         done.setGravity(Gravity.CENTER);
-        done.setPadding(0, dp(20), 0, dp(14));
+        done.setPadding(0, dp(16), 0, dp(18));
         receipt.addView(done, matchWrap());
 
-        TextView amountLine = label("تم تحويل " + formatEtisalatAmount(lastEtisalatAmount) + " جنيه إلى", 23, INK, false);
+        TextView amountCaption = label("المبلغ المحوّل", 16, MUTED, true);
+        amountCaption.setGravity(Gravity.CENTER);
+        receipt.addView(amountCaption, matchWrap());
+
+        TextView amountLine = label(formatEtisalatAmount(lastEtisalatAmount) + " جنيه", 27, INK, true);
         amountLine.setGravity(Gravity.CENTER);
         amountLine.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        amountLine.setPadding(0, dp(4), 0, dp(18));
         receipt.addView(amountLine, matchWrap());
 
-        TextView recipient = label(lastEtisalatPhone, 24, INK, true);
-        recipient.setGravity(Gravity.CENTER);
-        recipient.setTextDirection(View.TEXT_DIRECTION_LTR);
-        recipient.setPadding(0, dp(17), 0, dp(17));
-        receipt.addView(recipient, matchWrap());
+        View separator = new View(this);
+        separator.setBackgroundColor(Color.rgb(230, 235, 241));
+        receipt.addView(separator, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
 
-        TextView disclosure = label("سجل محلي أنشأه Smart Wallet بناءً على تأكيد المستخدم، وليس إيصالًا رسميًا من e&.", 11, MUTED, false);
+        LinearLayout details = new LinearLayout(this);
+        details.setOrientation(LinearLayout.VERTICAL);
+        details.setPadding(0, dp(12), 0, dp(10));
+        receipt.addView(details, matchWrap());
+
+        addReceiptDetailRow(details, "المحفظة", "e& Cash", false);
+        addReceiptDetailRow(details, "رقم المستلم", lastEtisalatPhone, true);
+        String receiptDate = new java.text.SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new java.util.Date());
+        String receiptTime = new java.text.SimpleDateFormat("hh:mm a", Locale.US).format(new java.util.Date());
+        String localRecordId = String.format(Locale.US, "SW-%013d", System.currentTimeMillis());
+        addReceiptDetailRow(details, "التاريخ", receiptDate, true);
+        addReceiptDetailRow(details, "الوقت", receiptTime, true);
+        addReceiptDetailRow(details, "رقم السجل", localRecordId, true);
+
+        LinearLayout noteBox = new LinearLayout(this);
+        noteBox.setOrientation(LinearLayout.VERTICAL);
+        noteBox.setPadding(dp(12), dp(12), dp(12), dp(12));
+        noteBox.setBackground(round(Color.rgb(237, 248, 240), 12));
+        TextView disclosure = label("سجل محلي محفوظ بواسطة Smart Wallet", 14, Color.rgb(28, 112, 62), true);
         disclosure.setGravity(Gravity.CENTER);
         disclosure.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        disclosure.setPadding(dp(4), dp(8), dp(4), 0);
-        receipt.addView(disclosure, matchWrap());
+        noteBox.addView(disclosure, matchWrap());
+        receipt.addView(noteBox, matchWrap());
 
-        Button share = button("مشاركة", RED, Color.WHITE);
+        Button share = button("مشاركة الإيصال", GREEN, Color.WHITE);
         LinearLayout.LayoutParams shareParams = matchWrap();
         shareParams.topMargin = dp(18);
         page.addView(share, shareParams);
         share.setOnClickListener(v -> shareEtisalatReceiptImage(receipt));
         setContentView(scroll);
+    }
+
+    private void addReceiptDetailRow(LinearLayout parent, String title, String value, boolean ltrValue) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setPadding(0, dp(8), 0, dp(8));
+
+        TextView key = label(title, 15, MUTED, false);
+        key.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        row.addView(key, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView val = label(value, 16, INK, true);
+        val.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        if (ltrValue) val.setTextDirection(View.TEXT_DIRECTION_LTR);
+        row.addView(val, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        parent.addView(row, matchWrap());
+
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.rgb(239, 242, 246));
+        parent.addView(divider, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
     }
 
     private String formatEtisalatAmount(String raw) {
