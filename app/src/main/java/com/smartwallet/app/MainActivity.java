@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
         offline.setGravity(Gravity.CENTER);
         offline.setPadding(0, dp(22), 0, dp(8));
         page.addView(offline);
-        TextView version = label("SMART WALLET  •  3.10", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  3.11", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         page.addView(version);
         setContentView(redFrame(page));
@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
         page.addView(section);
         addService(page, "الاستعلام عن الرصيد", "اعرف رصيد محفظتك بسهولة", "◉", ROYAL_BLUE, v -> openUssd("*9*13#"));
         addService(page, "تحويل الأموال", "حوّل الأموال إلى رقم محمول أو جهة اتصال", "⇄", TEAL, v -> showTransfer());
-        TextView version = label("SMART WALLET  •  3.10", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  3.11", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         page.addView(version);
         setContentView(redFrame(page));
