@@ -722,6 +722,7 @@ public class MainActivity extends Activity {
                 addReceiptDetailRow(recordCard, "رقم المستلم", item.optString("phone", ""), true);
                 addReceiptDetailRow(recordCard, "التاريخ", item.optString("date", ""), true);
                 addReceiptDetailRow(recordCard, "الوقت", item.optString("time", ""), true);
+                addReceiptStatusRow(recordCard);
                 addReceiptDetailRow(recordCard, "رقم السجل", id, true);
 
                 Button remove = button("حذف هذه العملية", Color.rgb(255, 230, 230), RED);
@@ -748,6 +749,28 @@ public class MainActivity extends Activity {
         }
 
         setContentView(wrapScroll(redFrame(page)));
+    }
+
+    private void addReceiptStatusRow(LinearLayout parent) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setPadding(0, dp(8), 0, dp(8));
+
+        TextView key = label("حالة العملية", 15, MUTED, false);
+        key.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        row.addView(key, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView value = label("عملية ناجحة", 16, Color.rgb(22, 150, 75), true);
+        value.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        row.addView(value, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        parent.addView(row, matchWrap());
+
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.rgb(239, 242, 246));
+        parent.addView(divider, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
     }
 
     private void addReceiptDetailRow(LinearLayout parent, String title, String value, boolean ltrValue) {
