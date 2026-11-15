@@ -99,7 +99,8 @@ public class MainActivity extends Activity {
         showHome();
     }
 
-    private void showHome() {\n        currentScreen = "home";
+    private void showHome() {
+        currentScreen = "home";
         LinearLayout page = basePage();
         page.setPadding(dp(16), dp(18), dp(16), dp(12));
 
@@ -146,7 +147,8 @@ public class MainActivity extends Activity {
         setContentView(redFrame(page));
     }
 
-    private void showVodafoneHome() {\n        currentScreen = "vodafone_home";
+    private void showVodafoneHome() {
+        currentScreen = "vodafone_home";
         LinearLayout page = basePage();
         page.setPadding(dp(16), dp(14), dp(16), dp(8));
         Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
@@ -167,7 +169,8 @@ public class MainActivity extends Activity {
         setContentView(redFrame(page));
     }
 
-    private void showEtisalatHome() {\n        currentScreen = "etisalat_home";
+    private void showEtisalatHome() {
+        currentScreen = "etisalat_home";
         LinearLayout page = basePage();
         Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
         back.setOnClickListener(v -> showHome());
@@ -188,7 +191,8 @@ public class MainActivity extends Activity {
         setContentView(redFrame(page));
     }
 
-    private void showEtisalatTransfer() {\n        currentScreen = "etisalat_transfer";
+    private void showEtisalatTransfer() {
+        currentScreen = "etisalat_transfer";
         lastEtisalatPhone = null;
         lastEtisalatAmount = null;
         etisalatRecordButton = null;
@@ -416,7 +420,8 @@ public class MainActivity extends Activity {
                 .show();
     }
 
-    private void showEtisalatLocalRecord() {\n        currentScreen = "etisalat_receipt";
+    private void showEtisalatLocalRecord() {
+        currentScreen = "etisalat_receipt";
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
@@ -516,7 +521,8 @@ public class MainActivity extends Activity {
         setContentView(frame);
     }
 
-    private void showVodafoneLocalRecord() {\n        currentScreen = "vodafone_receipt";
+    private void showVodafoneLocalRecord() {
+        currentScreen = "vodafone_receipt";
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
@@ -778,7 +784,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showTransfer() {\n        currentScreen = "vodafone_transfer";
+    private void showTransfer() {
+        currentScreen = "vodafone_transfer";
         lastVodafonePhone = null;
         lastVodafoneAmount = null;
         vodafoneRecordButton = null;
