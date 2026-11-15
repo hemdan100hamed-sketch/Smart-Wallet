@@ -53,6 +53,11 @@ public class MainActivity extends Activity {
     private static final int CONTACT_PICKER = 410;
     private static final String PREFS = "smart_wallet_preferences";
     private static final String FAVORITES_KEY = "favorite_recipients";
+    private static final String RECORDS_KEY = "local_transfer_records";
+    private String currentScreen = "home";
+    private String recordsReturnScreen = "home";
+    private String lastEtisalatRecordId;
+    private String lastVodafoneRecordId;
 
     private EditText phoneInput;
     private EditText amountInput;
@@ -68,6 +73,24 @@ public class MainActivity extends Activity {
     private AsteriskPasswordTransformationMethod pinMaskMethod;
 
     @Override
+    public void onBackPressed() {
+        if ("local_records".equals(currentScreen)) returnToRecordsOrigin();
+        else if ("vodafone_receipt".equals(currentScreen)) showTransfer();
+        else if ("etisalat_receipt".equals(currentScreen)) showEtisalatTransfer();
+        else if ("vodafone_transfer".equals(currentScreen)) showVodafoneHome();
+        else if ("etisalat_transfer".equals(currentScreen)) showEtisalatHome();
+        else if ("vodafone_home".equals(currentScreen) || "etisalat_home".equals(currentScreen)) showHome();
+        else super.onBackPressed();
+    }
+
+    private void returnToRecordsOrigin() {
+        String destination = recordsReturnScreen;
+        if ("vodafone_home".equals(destination)) showVodafoneHome();
+        else if ("etisalat_home".equals(destination)) showEtisalatHome();
+        else showHome();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(RED);
@@ -76,7 +99,7 @@ public class MainActivity extends Activity {
         showHome();
     }
 
-    private void showHome() {
+    private void showHome() {\n        currentScreen = "home";
         LinearLayout page = basePage();
         page.setPadding(dp(16), dp(18), dp(16), dp(12));
 
@@ -117,13 +140,13 @@ public class MainActivity extends Activity {
         offline.setGravity(Gravity.CENTER);
         offline.setPadding(0, dp(22), 0, dp(8));
         page.addView(offline);
-        TextView version = label("SMART WALLET  •  4.1", 12, MUTED, true);
+        TextView version = label("SMART WALLET  •  4.3", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         page.addView(version);
         setContentView(redFrame(page));
     }
 
-    private void showVodafoneHome() {
+    private void showVodafoneHome() {\n        currentScreen = "vodafone_home";
         LinearLayout page = basePage();
         page.setPadding(dp(16), dp(14), dp(16), dp(8));
         Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
@@ -134,13 +157,17 @@ public class MainActivity extends Activity {
         page.addView(section);
         addService(page, "الاستعلام عن الرصيد", "اعرف رصيد محفظتك بسهولة", "◉", ROYAL_BLUE, v -> openUssd("*9*13#"));
         addService(page, "تحويل الأموال", "حوّل الأموال إلى رقم محمول أو جهة اتصال", "⇄", TEAL, v -> showTransfer());
-        TextView version = label("SMART WALLET  •  3.10", 12, MUTED, true);
+        addService(page, "سجل العمليات", "عرض التحويلات المحفوظة وإدارتها", "▤", GREEN, v -> {
+            recordsReturnScreen = "vodafone_home";
+            showLocalRecords();
+        });
+        TextView version = label("SMART WALLET  •  4.3", 12, MUTED, true);
         version.setGravity(Gravity.CENTER);
         page.addView(version);
         setContentView(redFrame(page));
     }
 
-    private void showEtisalatHome() {
+    private void showEtisalatHome() {\n        currentScreen = "etisalat_home";
         LinearLayout page = basePage();
         Button back = button("رجوع لاختيار المحفظة", Color.rgb(235, 238, 243), INK);
         back.setOnClickListener(v -> showHome());
@@ -150,6 +177,10 @@ public class MainActivity extends Activity {
         page.addView(section);
         addService(page, "الاستعلام عن الرصيد", "استعلم عن رصيد محفظتك", "◉", ROYAL_BLUE, v -> openUssd("*777*4#"));
         addService(page, "تحويل الأموال", "إدخال بيانات التحويل ومراجعتها قبل الاتصال", "⇄", TEAL, v -> showEtisalatTransfer());
+        addService(page, "سجل العمليات", "عرض التحويلات المحفوظة وإدارتها", "▤", GREEN, v -> {
+            recordsReturnScreen = "etisalat_home";
+            showLocalRecords();
+        });
         TextView offline = label("لا يحتاج التطبيق إلى الإنترنت", 16, GREEN, true);
         offline.setGravity(Gravity.CENTER);
         offline.setPadding(0, dp(18), 0, 0);
@@ -157,7 +188,7 @@ public class MainActivity extends Activity {
         setContentView(redFrame(page));
     }
 
-    private void showEtisalatTransfer() {
+    private void showEtisalatTransfer() {\n        currentScreen = "etisalat_transfer";
         lastEtisalatPhone = null;
         lastEtisalatAmount = null;
         etisalatRecordButton = null;
@@ -378,11 +409,14 @@ public class MainActivity extends Activity {
                 .setTitle("تأكيد نجاح التحويل")
                 .setMessage("هل شاهدت رسالة نجاح التحويل داخل تطبيق e& كاش الرسمي؟ سيُنشأ سجل محلي بناءً على تأكيدك.")
                 .setNegativeButton("رجوع", null)
-                .setPositiveButton("نعم، عرض السجل", (dialog, which) -> showEtisalatLocalRecord())
+                .setPositiveButton("نعم، عرض السجل", (dialog, which) -> {
+                    lastEtisalatRecordId = saveLocalRecord("e& Cash", lastEtisalatPhone, lastEtisalatAmount);
+                    showEtisalatLocalRecord();
+                })
                 .show();
     }
 
-    private void showEtisalatLocalRecord() {
+    private void showEtisalatLocalRecord() {\n        currentScreen = "etisalat_receipt";
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
@@ -392,6 +426,10 @@ public class MainActivity extends Activity {
         page.setGravity(Gravity.CENTER_HORIZONTAL);
         page.setPadding(dp(18), dp(24), dp(18), dp(18));
         scroll.addView(page);
+
+        Button returnButton = button("العودة إلى شاشة التحويل", Color.rgb(235, 238, 243), INK);
+        returnButton.setOnClickListener(v -> showEtisalatTransfer());
+        page.addView(returnButton, matchWrap());
 
         LinearLayout receipt = new LinearLayout(this);
         receipt.setOrientation(LinearLayout.VERTICAL);
@@ -447,9 +485,10 @@ public class MainActivity extends Activity {
 
         addReceiptDetailRow(details, "المحفظة", "e& Cash", false);
         addReceiptDetailRow(details, "رقم المستلم", lastEtisalatPhone, true);
-        String receiptDate = new java.text.SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new java.util.Date());
-        String receiptTime = new java.text.SimpleDateFormat("hh:mm a", Locale.US).format(new java.util.Date());
-        String localRecordId = String.format(Locale.US, "SW-%013d", System.currentTimeMillis());
+        JSONObject savedRecord = findLocalRecord(lastEtisalatRecordId);
+        String receiptDate = savedRecord == null ? "" : savedRecord.optString("date", "");
+        String receiptTime = savedRecord == null ? "" : savedRecord.optString("time", "");
+        String localRecordId = savedRecord == null ? "" : savedRecord.optString("id", "");
         addReceiptDetailRow(details, "التاريخ", receiptDate, true);
         addReceiptDetailRow(details, "الوقت", receiptTime, true);
         addReceiptDetailRow(details, "رقم السجل", localRecordId, true);
@@ -477,7 +516,7 @@ public class MainActivity extends Activity {
         setContentView(frame);
     }
 
-    private void showVodafoneLocalRecord() {
+    private void showVodafoneLocalRecord() {\n        currentScreen = "vodafone_receipt";
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
@@ -487,6 +526,10 @@ public class MainActivity extends Activity {
         page.setGravity(Gravity.CENTER_HORIZONTAL);
         page.setPadding(dp(18), dp(24), dp(18), dp(18));
         scroll.addView(page);
+
+        Button returnButton = button("العودة إلى شاشة التحويل", Color.rgb(235, 238, 243), INK);
+        returnButton.setOnClickListener(v -> showTransfer());
+        page.addView(returnButton, matchWrap());
 
         LinearLayout receipt = new LinearLayout(this);
         receipt.setOrientation(LinearLayout.VERTICAL);
@@ -542,9 +585,10 @@ public class MainActivity extends Activity {
 
         addReceiptDetailRow(details, "المحفظة", "Vodafone Cash", false);
         addReceiptDetailRow(details, "رقم المستلم", lastVodafonePhone, true);
-        String receiptDate = new java.text.SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new java.util.Date());
-        String receiptTime = new java.text.SimpleDateFormat("hh:mm a", Locale.US).format(new java.util.Date());
-        String localRecordId = String.format(Locale.US, "SW-%013d", System.currentTimeMillis());
+        JSONObject savedRecord = findLocalRecord(lastVodafoneRecordId);
+        String receiptDate = savedRecord == null ? "" : savedRecord.optString("date", "");
+        String receiptTime = savedRecord == null ? "" : savedRecord.optString("time", "");
+        String localRecordId = savedRecord == null ? "" : savedRecord.optString("id", "");
         addReceiptDetailRow(details, "التاريخ", receiptDate, true);
         addReceiptDetailRow(details, "الوقت", receiptTime, true);
         addReceiptDetailRow(details, "رقم السجل", localRecordId, true);
@@ -578,8 +622,94 @@ public class MainActivity extends Activity {
                 .setTitle("تأكيد نجاح التحويل")
                 .setMessage("هل شاهدت رسالة نجاح التحويل داخل تطبيق فودافون كاش الرسمي؟ سيُنشأ سجل محلي بناءً على تأكيدك.")
                 .setNegativeButton("رجوع", null)
-                .setPositiveButton("نعم، عرض السجل", (dialog, which) -> showVodafoneLocalRecord())
+                .setPositiveButton("نعم، عرض السجل", (dialog, which) -> {
+                    lastVodafoneRecordId = saveLocalRecord("Vodafone Cash", lastVodafonePhone, lastVodafoneAmount);
+                    showVodafoneLocalRecord();
+                })
                 .show();
+    }
+
+
+    private JSONArray readLocalRecords() {
+        String raw = getSharedPreferences(PREFS, MODE_PRIVATE).getString(RECORDS_KEY, "[]");
+        try { return new JSONArray(raw); } catch (Exception ex) { return new JSONArray(); }
+    }
+    private void writeLocalRecords(JSONArray records) {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(RECORDS_KEY, records.toString()).apply();
+    }
+    private String saveLocalRecord(String wallet, String phone, String amount) {
+        try {
+            String id = String.format(Locale.US, "SW-%013d", System.currentTimeMillis());
+            String date = new java.text.SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new java.util.Date());
+            String time = new java.text.SimpleDateFormat("hh:mm a", Locale.US).format(new java.util.Date());
+            JSONObject item = new JSONObject();
+            item.put("id", id); item.put("wallet", wallet); item.put("phone", phone);
+            item.put("amount", amount); item.put("date", date); item.put("time", time);
+            JSONArray records = readLocalRecords(); records.put(item); writeLocalRecords(records);
+            return id;
+        } catch (Exception ex) {
+            Toast.makeText(this, "تعذر حفظ العملية محليًا.", Toast.LENGTH_LONG).show();
+            return null;
+        }
+    }
+    private JSONObject findLocalRecord(String id) {
+        if (id == null) return null;
+        JSONArray records = readLocalRecords();
+        for (int i = 0; i < records.length(); i++) {
+            JSONObject item = records.optJSONObject(i);
+            if (item != null && id.equals(item.optString("id"))) return item;
+        }
+        return null;
+    }
+    private void showLocalRecords() {
+        currentScreen = "local_records";
+        JSONArray records = readLocalRecords();
+        LinearLayout page = basePage();
+        TextView heading = label("سجل العمليات المحفوظة", 25, NAVY, true);
+        heading.setGravity(Gravity.CENTER); heading.setPadding(0, dp(8), 0, dp(16));
+        page.addView(heading, matchWrap());
+        Button back = button("العودة إلى القائمة السابقة", Color.rgb(235, 238, 243), INK);
+        back.setOnClickListener(v -> returnToRecordsOrigin()); page.addView(back, matchWrap());
+        if (records.length() > 0) {
+            Button clear = button("مسح جميع العمليات", Color.rgb(255, 230, 230), RED);
+            LinearLayout.LayoutParams cp = matchWrap(); cp.topMargin = dp(10); page.addView(clear, cp);
+            clear.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("مسح سجل العمليات")
+                .setMessage("هل تريد حذف جميع العمليات المحفوظة نهائيًا من هذا الهاتف؟")
+                .setNegativeButton("إلغاء", null).setPositiveButton("نعم، امسح السجل", (d, which) -> {
+                    writeLocalRecords(new JSONArray()); showLocalRecords();
+                }).show());
+        }
+        if (records.length() == 0) {
+            TextView empty = label("لا توجد عمليات محفوظة حتى الآن.\\nستظهر هنا العمليات بعد تأكيد نجاحها يدويًا.", 18, MUTED, false);
+            empty.setGravity(Gravity.CENTER); empty.setPadding(dp(12), dp(30), dp(12), dp(30));
+            page.addView(empty, matchWrap());
+        } else {
+            for (int i = records.length() - 1; i >= 0; i--) {
+                JSONObject item = records.optJSONObject(i); if (item == null) continue;
+                final String id = item.optString("id", "");
+                LinearLayout recordCard = card(page);
+                recordCard.addView(label(item.optString("wallet", "محفظة"), 20, NAVY, true), matchWrap());
+                TextView amount = label("المبلغ: " + item.optString("amount", "") + " جنيه", 19, GREEN, true);
+                amount.setPadding(0, dp(6), 0, dp(4)); recordCard.addView(amount, matchWrap());
+                TextView details = label("رقم المستلم: " + item.optString("phone", "") +
+                    "\\nالتاريخ: " + item.optString("date", "") + "\\nالوقت: " + item.optString("time", "") +
+                    "\\nرقم السجل: " + id, 15, INK, false);
+                details.setPadding(0, dp(4), 0, dp(8)); recordCard.addView(details, matchWrap());
+                Button remove = button("حذف هذه العملية", Color.rgb(255, 230, 230), RED);
+                recordCard.addView(remove, matchWrap());
+                remove.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("حذف العملية")
+                    .setMessage("هل تريد حذف هذه العملية من السجل المحلي؟").setNegativeButton("إلغاء", null)
+                    .setPositiveButton("حذف", (d, which) -> {
+                        JSONArray oldRecords = readLocalRecords(), remaining = new JSONArray();
+                        for (int j = 0; j < oldRecords.length(); j++) {
+                            JSONObject candidate = oldRecords.optJSONObject(j);
+                            if (candidate != null && !id.equals(candidate.optString("id"))) remaining.put(candidate);
+                        }
+                        writeLocalRecords(remaining); showLocalRecords();
+                    }).show());
+            }
+        }
+        setContentView(wrapScroll(redFrame(page)));
     }
 
     private void addReceiptDetailRow(LinearLayout parent, String title, String value, boolean ltrValue) {
@@ -648,7 +778,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showTransfer() {
+    private void showTransfer() {\n        currentScreen = "vodafone_transfer";
         lastVodafonePhone = null;
         lastVodafoneAmount = null;
         vodafoneRecordButton = null;
