@@ -1,5 +1,5 @@
 name: Build Smart Wallet APK
-# Rebuild after adding the green successful-operation status to local history.
+# Rebuild after unifying wallet input controls and success receipt layouts.
 
 on:
   push:
