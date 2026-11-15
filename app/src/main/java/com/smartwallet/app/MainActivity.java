@@ -214,22 +214,23 @@ public class MainActivity extends Activity {
         LinearLayout phoneRow = new LinearLayout(this);
         phoneRow.setOrientation(LinearLayout.HORIZONTAL);
         phoneRow.setGravity(Gravity.CENTER_VERTICAL);
+        // ترتيب ثابت: جهات الاتصال يسارًا، ثم المفضلة بجوار حقل الإدخال.
         phoneRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        phoneRow.setPadding(dp(4), dp(4), dp(4), dp(4));
+        phoneRow.setPadding(dp(5), dp(5), dp(5), dp(5));
         phoneRow.setBackground(inputBorder(FIELD_BORDER));
-        form.addView(phoneRow, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(68)));
+        form.addView(phoneRow, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(78)));
+
+        Button contacts = button("👤", Color.TRANSPARENT, RED);
+        styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
+        contacts.setTextSize(26);
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(44), dp(64)));
+        contacts.setOnClickListener(v -> chooseContact());
 
         Button favorites = button("♡", Color.TRANSPARENT, RED);
         styleInlineIcon(favorites, "الأرقام المفضلة");
-        favorites.setTextSize(25);
-        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(34), dp(52)));
+        favorites.setTextSize(27);
+        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(44), dp(64)));
         favorites.setOnClickListener(v -> showFavorites());
-
-        Button contacts = button("♙", Color.TRANSPARENT, RED);
-        styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
-        contacts.setTextSize(24);
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(34), dp(52)));
-        contacts.setOnClickListener(v -> chooseContact());
 
         phoneInput = new EditText(this);
         phoneInput.setSingleLine(true);
@@ -422,107 +423,19 @@ public class MainActivity extends Activity {
 
     private void showEtisalatLocalRecord() {
         currentScreen = "etisalat_receipt";
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(PAGE);
-
-        LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setGravity(Gravity.CENTER_HORIZONTAL);
-        page.setPadding(dp(18), dp(24), dp(18), dp(18));
-        scroll.addView(page);
-
-        Button returnButton = button("العودة إلى شاشة التحويل", Color.rgb(235, 238, 243), INK);
-        returnButton.setOnClickListener(v -> showEtisalatTransfer());
-        page.addView(returnButton, matchWrap());
-
-        LinearLayout receipt = new LinearLayout(this);
-        receipt.setOrientation(LinearLayout.VERTICAL);
-        receipt.setGravity(Gravity.CENTER_HORIZONTAL);
-        receipt.setPadding(dp(22), dp(24), dp(22), dp(22));
-        receipt.setBackground(round(Color.WHITE, 18));
-        receipt.setElevation(dp(2));
-        page.addView(receipt, matchWrap());
-
-        TextView brand = label("Smart Wallet", 17, NAVY, true);
-        brand.setGravity(Gravity.CENTER);
-        receipt.addView(brand, matchWrap());
-
-        // علامة الصح داخل دائرة خضراء واضحة.
-        TextView check = new TextView(this);
-        check.setText("✓");
-        check.setTextSize(38);
-        check.setTextColor(Color.WHITE);
-        check.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        check.setGravity(Gravity.CENTER);
-        GradientDrawable circle = new GradientDrawable();
-        circle.setShape(GradientDrawable.OVAL);
-        circle.setColor(GREEN);
-        check.setBackground(circle);
-        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(dp(76), dp(76));
-        checkParams.topMargin = dp(14);
-        receipt.addView(check, checkParams);
-
-        TextView done = label("تم التحويل بنجاح", 27, GREEN, true);
-        done.setGravity(Gravity.CENTER);
-        done.setPadding(0, dp(16), 0, dp(18));
-        receipt.addView(done, matchWrap());
-
-        TextView amountCaption = label("المبلغ المحوّل", 16, MUTED, true);
-        amountCaption.setGravity(Gravity.CENTER);
-        receipt.addView(amountCaption, matchWrap());
-
-        TextView amountLine = label(formatEtisalatAmount(lastEtisalatAmount) + " جنيه", 27, INK, true);
-        amountLine.setGravity(Gravity.CENTER);
-        amountLine.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        amountLine.setPadding(0, dp(4), 0, dp(18));
-        receipt.addView(amountLine, matchWrap());
-
-        View separator = new View(this);
-        separator.setBackgroundColor(Color.rgb(230, 235, 241));
-        receipt.addView(separator, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
-
-        LinearLayout details = new LinearLayout(this);
-        details.setOrientation(LinearLayout.VERTICAL);
-        details.setPadding(0, dp(12), 0, dp(10));
-        receipt.addView(details, matchWrap());
-
-        addReceiptDetailRow(details, "المحفظة", "e& Cash", false);
-        addReceiptDetailRow(details, "رقم المستلم", lastEtisalatPhone, true);
-        JSONObject savedRecord = findLocalRecord(lastEtisalatRecordId);
-        String receiptDate = savedRecord == null ? "" : savedRecord.optString("date", "");
-        String receiptTime = savedRecord == null ? "" : savedRecord.optString("time", "");
-        String localRecordId = savedRecord == null ? "" : savedRecord.optString("id", "");
-        addReceiptDetailRow(details, "التاريخ", receiptDate, true);
-        addReceiptDetailRow(details, "الوقت", receiptTime, true);
-        addReceiptDetailRow(details, "رقم السجل", localRecordId, true);
-
-        Button share = button("مشاركة الإيصال", GREEN, Color.WHITE);
-        LinearLayout.LayoutParams shareParams = matchWrap();
-        shareParams.topMargin = dp(18);
-        page.addView(share, shareParams);
-        share.setOnClickListener(v -> shareEtisalatReceiptImage(receipt));
-
-        // العبارة المحلية المختصرة تظهر بخط صغير في نهاية الصفحة.
-        TextView disclosure = label("سجل محلي محفوظ بواسطة Smart Wallet", 10, MUTED, false);
-        disclosure.setGravity(Gravity.CENTER);
-        disclosure.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        disclosure.setPadding(dp(4), dp(12), dp(4), dp(8));
-        page.addView(disclosure, matchWrap());
-
-        // إطار أحمر سميك يحيط بواجهة الإيصال.
-        LinearLayout frame = new LinearLayout(this);
-        frame.setOrientation(LinearLayout.VERTICAL);
-        frame.setPadding(dp(8), dp(8), dp(8), dp(8));
-        frame.setBackground(round(RED, 22));
-        frame.addView(scroll, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        setContentView(frame);
+        showTransferReceipt("e& Cash", lastEtisalatPhone, lastEtisalatAmount,
+                lastEtisalatRecordId, () -> showEtisalatTransfer());
     }
 
     private void showVodafoneLocalRecord() {
         currentScreen = "vodafone_receipt";
+        showTransferReceipt("Vodafone Cash", lastVodafonePhone, lastVodafoneAmount,
+                lastVodafoneRecordId, () -> showTransfer());
+    }
+
+    // Shared receipt renderer guarantees identical layout for both wallets.
+    private void showTransferReceipt(String walletName, String phone, String amount,
+                                     String recordId, Runnable returnAction) {
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
         scroll.setBackgroundColor(PAGE);
@@ -534,7 +447,7 @@ public class MainActivity extends Activity {
         scroll.addView(page);
 
         Button returnButton = button("العودة إلى شاشة التحويل", Color.rgb(235, 238, 243), INK);
-        returnButton.setOnClickListener(v -> showTransfer());
+        returnButton.setOnClickListener(v -> returnAction.run());
         page.addView(returnButton, matchWrap());
 
         LinearLayout receipt = new LinearLayout(this);
@@ -549,7 +462,6 @@ public class MainActivity extends Activity {
         brand.setGravity(Gravity.CENTER);
         receipt.addView(brand, matchWrap());
 
-        // علامة الصح داخل دائرة خضراء واضحة.
         TextView check = new TextView(this);
         check.setText("✓");
         check.setTextSize(38);
@@ -573,7 +485,7 @@ public class MainActivity extends Activity {
         amountCaption.setGravity(Gravity.CENTER);
         receipt.addView(amountCaption, matchWrap());
 
-        TextView amountLine = label(formatEtisalatAmount(lastVodafoneAmount) + " جنيه", 27, INK, true);
+        TextView amountLine = label(formatEtisalatAmount(amount) + " جنيه", 27, INK, true);
         amountLine.setGravity(Gravity.CENTER);
         amountLine.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         amountLine.setPadding(0, dp(4), 0, dp(18));
@@ -589,9 +501,9 @@ public class MainActivity extends Activity {
         details.setPadding(0, dp(12), 0, dp(10));
         receipt.addView(details, matchWrap());
 
-        addReceiptDetailRow(details, "المحفظة", "Vodafone Cash", false);
-        addReceiptDetailRow(details, "رقم المستلم", lastVodafonePhone, true);
-        JSONObject savedRecord = findLocalRecord(lastVodafoneRecordId);
+        addReceiptDetailRow(details, "المحفظة", walletName, false);
+        addReceiptDetailRow(details, "رقم المستلم", phone, true);
+        JSONObject savedRecord = findLocalRecord(recordId);
         String receiptDate = savedRecord == null ? "" : savedRecord.optString("date", "");
         String receiptTime = savedRecord == null ? "" : savedRecord.optString("time", "");
         String localRecordId = savedRecord == null ? "" : savedRecord.optString("id", "");
@@ -605,14 +517,12 @@ public class MainActivity extends Activity {
         page.addView(share, shareParams);
         share.setOnClickListener(v -> shareEtisalatReceiptImage(receipt));
 
-        // العبارة المحلية المختصرة تظهر بخط صغير في نهاية الصفحة.
         TextView disclosure = label("سجل محلي محفوظ بواسطة Smart Wallet", 10, MUTED, false);
         disclosure.setGravity(Gravity.CENTER);
         disclosure.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         disclosure.setPadding(dp(4), dp(12), dp(4), dp(8));
         page.addView(disclosure, matchWrap());
 
-        // إطار أحمر سميك يحيط بواجهة الإيصال.
         LinearLayout frame = new LinearLayout(this);
         frame.setOrientation(LinearLayout.VERTICAL);
         frame.setPadding(dp(8), dp(8), dp(8), dp(8));
@@ -861,7 +771,7 @@ public class MainActivity extends Activity {
         LinearLayout phoneRow = new LinearLayout(this);
         phoneRow.setOrientation(LinearLayout.HORIZONTAL);
         phoneRow.setGravity(Gravity.CENTER_VERTICAL);
-        // ترتيب مادي ثابت: المفضلة أقصى اليسار، ثم جهات الاتصال، ثم حقل الرقم الواسع.
+        // ترتيب ثابت: جهات الاتصال يسارًا، ثم المفضلة بجوار حقل الإدخال.
         phoneRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         form.addView(phoneRow, matchWrap());
 
@@ -884,15 +794,17 @@ public class MainActivity extends Activity {
         phoneInput.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         phoneInput.setBackgroundColor(Color.TRANSPARENT);
 
-        Button favorites = button("♡", Color.TRANSPARENT, RED);
-        styleInlineIcon(favorites, "الأرقام المفضلة");
-        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(40), dp(58)));
-        favorites.setOnClickListener(v -> showFavorites());
-
         Button contacts = button("👤", Color.TRANSPARENT, RED);
         styleInlineIcon(contacts, "اختيار رقم من جهات الاتصال");
-        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(40), dp(58)));
+        contacts.setTextSize(26);
+        phoneRow.addView(contacts, new LinearLayout.LayoutParams(dp(44), dp(64)));
         contacts.setOnClickListener(v -> chooseContact());
+
+        Button favorites = button("♡", Color.TRANSPARENT, RED);
+        styleInlineIcon(favorites, "الأرقام المفضلة");
+        favorites.setTextSize(27);
+        phoneRow.addView(favorites, new LinearLayout.LayoutParams(dp(44), dp(64)));
+        favorites.setOnClickListener(v -> showFavorites());
 
         LinearLayout.LayoutParams phoneParams = new LinearLayout.LayoutParams(0, dp(76), 1f);
         phoneParams.leftMargin = dp(2);
