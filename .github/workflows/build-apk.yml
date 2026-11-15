@@ -1,5 +1,5 @@
 name: Build Smart Wallet APK
-# Rebuild after correcting the 4.3 Java source syntax and formatting local history rows.
+# Rebuild after adding the green successful-operation status to local history.
 
 on:
   push:
