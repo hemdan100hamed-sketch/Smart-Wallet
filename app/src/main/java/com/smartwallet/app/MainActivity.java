@@ -671,50 +671,82 @@ public class MainActivity extends Activity {
         currentScreen = "local_records";
         JSONArray records = readLocalRecords();
         LinearLayout page = basePage();
+
         TextView heading = label("سجل العمليات المحفوظة", 25, NAVY, true);
-        heading.setGravity(Gravity.CENTER); heading.setPadding(0, dp(8), 0, dp(16));
+        heading.setGravity(Gravity.CENTER);
+        heading.setPadding(0, dp(8), 0, dp(16));
         page.addView(heading, matchWrap());
+
         Button back = button("العودة إلى القائمة السابقة", Color.rgb(235, 238, 243), INK);
-        back.setOnClickListener(v -> returnToRecordsOrigin()); page.addView(back, matchWrap());
+        back.setOnClickListener(v -> returnToRecordsOrigin());
+        page.addView(back, matchWrap());
+
         if (records.length() > 0) {
             Button clear = button("مسح جميع العمليات", Color.rgb(255, 230, 230), RED);
-            LinearLayout.LayoutParams cp = matchWrap(); cp.topMargin = dp(10); page.addView(clear, cp);
-            clear.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("مسح سجل العمليات")
-                .setMessage("هل تريد حذف جميع العمليات المحفوظة نهائيًا من هذا الهاتف؟")
-                .setNegativeButton("إلغاء", null).setPositiveButton("نعم، امسح السجل", (d, which) -> {
-                    writeLocalRecords(new JSONArray()); showLocalRecords();
-                }).show());
+            LinearLayout.LayoutParams clearParams = matchWrap();
+            clearParams.topMargin = dp(10);
+            page.addView(clear, clearParams);
+            clear.setOnClickListener(v -> new AlertDialog.Builder(this)
+                    .setTitle("مسح سجل العمليات")
+                    .setMessage("هل تريد حذف جميع العمليات المحفوظة نهائيًا من هذا الهاتف؟")
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("نعم، امسح السجل", (dialog, which) -> {
+                        writeLocalRecords(new JSONArray());
+                        showLocalRecords();
+                    }).show());
         }
+
         if (records.length() == 0) {
             TextView empty = label("لا توجد عمليات محفوظة حتى الآن.\\nستظهر هنا العمليات بعد تأكيد نجاحها يدويًا.", 18, MUTED, false);
-            empty.setGravity(Gravity.CENTER); empty.setPadding(dp(12), dp(30), dp(12), dp(30));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(dp(12), dp(30), dp(12), dp(30));
             page.addView(empty, matchWrap());
         } else {
             for (int i = records.length() - 1; i >= 0; i--) {
-                JSONObject item = records.optJSONObject(i); if (item == null) continue;
+                JSONObject item = records.optJSONObject(i);
+                if (item == null) continue;
+
                 final String id = item.optString("id", "");
                 LinearLayout recordCard = card(page);
-                recordCard.addView(label(item.optString("wallet", "محفظة"), 20, NAVY, true), matchWrap());
-                TextView amount = label("المبلغ: " + item.optString("amount", "") + " جنيه", 19, GREEN, true);
-                amount.setPadding(0, dp(6), 0, dp(4)); recordCard.addView(amount, matchWrap());
-                TextView details = label("رقم المستلم: " + item.optString("phone", "") +
-                    "\\nالتاريخ: " + item.optString("date", "") + "\\nالوقت: " + item.optString("time", "") +
-                    "\\nرقم السجل: " + id, 15, INK, false);
-                details.setPadding(0, dp(4), 0, dp(8)); recordCard.addView(details, matchWrap());
+
+                TextView wallet = label(item.optString("wallet", "محفظة"), 21, NAVY, true);
+                wallet.setGravity(Gravity.CENTER);
+                wallet.setPadding(0, dp(2), 0, dp(10));
+                recordCard.addView(wallet, matchWrap());
+
+                TextView amount = label("المبلغ: " + item.optString("amount", "") + " جنيه", 20, GREEN, true);
+                amount.setGravity(Gravity.CENTER);
+                amount.setPadding(0, 0, 0, dp(8));
+                recordCard.addView(amount, matchWrap());
+
+                addReceiptDetailRow(recordCard, "رقم المستلم", item.optString("phone", ""), true);
+                addReceiptDetailRow(recordCard, "التاريخ", item.optString("date", ""), true);
+                addReceiptDetailRow(recordCard, "الوقت", item.optString("time", ""), true);
+                addReceiptDetailRow(recordCard, "رقم السجل", id, true);
+
                 Button remove = button("حذف هذه العملية", Color.rgb(255, 230, 230), RED);
-                recordCard.addView(remove, matchWrap());
-                remove.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("حذف العملية")
-                    .setMessage("هل تريد حذف هذه العملية من السجل المحلي؟").setNegativeButton("إلغاء", null)
-                    .setPositiveButton("حذف", (d, which) -> {
-                        JSONArray oldRecords = readLocalRecords(), remaining = new JSONArray();
-                        for (int j = 0; j < oldRecords.length(); j++) {
-                            JSONObject candidate = oldRecords.optJSONObject(j);
-                            if (candidate != null && !id.equals(candidate.optString("id"))) remaining.put(candidate);
-                        }
-                        writeLocalRecords(remaining); showLocalRecords();
-                    }).show());
+                LinearLayout.LayoutParams removeParams = matchWrap();
+                removeParams.topMargin = dp(10);
+                recordCard.addView(remove, removeParams);
+                remove.setOnClickListener(v -> new AlertDialog.Builder(this)
+                        .setTitle("حذف العملية")
+                        .setMessage("هل تريد حذف هذه العملية من السجل المحلي؟")
+                        .setNegativeButton("إلغاء", null)
+                        .setPositiveButton("حذف", (dialog, which) -> {
+                            JSONArray oldRecords = readLocalRecords();
+                            JSONArray remaining = new JSONArray();
+                            for (int j = 0; j < oldRecords.length(); j++) {
+                                JSONObject candidate = oldRecords.optJSONObject(j);
+                                if (candidate != null && !id.equals(candidate.optString("id"))) {
+                                    remaining.put(candidate);
+                                }
+                            }
+                            writeLocalRecords(remaining);
+                            showLocalRecords();
+                        }).show());
             }
         }
+
         setContentView(wrapScroll(redFrame(page)));
     }
 
